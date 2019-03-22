@@ -34,3 +34,7 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+/U3D/Bin
+/U3D/Logs
+/U3D/Packages
+/Client/Client/bin/Debug
