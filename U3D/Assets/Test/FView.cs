@@ -30,8 +30,6 @@ public class FView : MonoBehaviour
 
     public RawImage riC920;
 
-    public Transform CamRoot;
-
     public RenderTexture rt;
 
 
@@ -45,15 +43,15 @@ public class FView : MonoBehaviour
         //程序一运行就绑定一下
         JsonTypeBind.Bind();
 
-        CamRoot = transform.Find("CamRoot");
-
+        string fViewJsonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FViewTool", "FView.json");
         //读取json的配置
-        string str = File.ReadAllText("FView.json");
+        string str = File.ReadAllText(fViewJsonPath);
         fViewRT = JsonMapper.ToObject<FViewRT>(str);
 
         //使用标定结果设置CamRoot的坐标
-        CamRoot.position = fViewRT.viewPosition;
-        CamRoot.rotation = fViewRT.viewRotation;
+        transform.localPosition = fViewRT.viewPosition;
+        transform.localRotation = fViewRT.viewRotation;
+
     }
 
     // Use this for initialization

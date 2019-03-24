@@ -76,6 +76,13 @@ namespace FSpace
 
             //设置自己是活动用户
             OCVData.fmSetActiveUser();
+
+            //这个物体作为父物体应该也应用一个倾斜,对它的第一级子物体赋旋转,
+            //但是不能对它自身赋旋转,因为它自身的旋转要作为整个系统的锚点参与计算
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                transform.GetChild(i).localRotation = FCore.slantRotate;
+            }
         }
 
         private void OnDrawGizmos()
