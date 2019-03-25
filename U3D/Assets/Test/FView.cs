@@ -32,6 +32,8 @@ public class FView : MonoBehaviour
 
     public RenderTexture rt;
 
+    private IntPtr rtPtr = IntPtr.Zero;
+    IntPtr VoxenShareWinInptr = IntPtr.Zero;
 
     /// <summary>
     /// 一个罗技摄像头姿态的记录
@@ -61,6 +63,8 @@ public class FView : MonoBehaviour
         await Task.Delay(3000);
 
         OpenFViewWindows();
+
+
     }
 
     // Update is called once per frame
@@ -69,6 +73,15 @@ public class FView : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.V))
         {
             OpenFViewWindows();
+        }
+
+        IntPtr curRtPtr = rt.GetNativeTexturePtr();
+        if (curRtPtr != rtPtr)
+        {
+            rtPtr = curRtPtr;
+            UnityEngine.Debug.Log("FView.Update():当前纹理指针赋值!" + rtPtr.ToInt64());
+            //调用c++dll
+            ShowInExe(VoxenShareWinInptr, rtPtr, 1920, 1080);
         }
     }
 
@@ -89,7 +102,7 @@ public class FView : MonoBehaviour
         viewProcess.Start();
 
 
-        IntPtr VoxenShareWinInptr = IntPtr.Zero;
+        VoxenShareWinInptr = IntPtr.Zero;
         while (true)
         {
             VoxenShareWinInptr = FindWindow(null, "ViewClient");
@@ -106,8 +119,7 @@ public class FView : MonoBehaviour
         }
 
         UnityEngine.Debug.Log("FView.OpenFViewWindows():开始绘图！");
-        //调用c++dll
-        ShowInExe(VoxenShareWinInptr, rt.GetNativeTexturePtr(), 1920, 1080);
+
     }
 
 
