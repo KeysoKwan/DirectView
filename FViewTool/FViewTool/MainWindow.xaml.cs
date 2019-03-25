@@ -44,7 +44,8 @@ namespace FViewTool
 
             Task.Run(() =>
             {
-                fview_start(_pathParamC920, "HD Pro Webcam C920", 1280, 720, buff);
+                //fview_start(_pathParamC920, "HD Pro Webcam C920", 1280, 720, buff);
+                fview_start2(_pathParamC920, 1280, 720, buff);
             });
 
         }
@@ -143,6 +144,9 @@ namespace FViewTool
         /// <returns></returns>
         [DllImport(@"F3DSystem.dll")]
         public static extern void fview_start(string camParamPath, string camName, int cam_w, int cam_h, IntPtr bmp);
+
+        [DllImport(@"F3DSystem.dll")]
+        public static extern void fview_start2(string camParamPath, int cam_w, int cam_h, IntPtr bmp);
 
         [DllImport(@"F3DSystem.dll")]
         public static extern bool fview_save(string savePath);
