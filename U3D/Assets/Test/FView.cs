@@ -80,8 +80,7 @@ public class FView : MonoBehaviour
         {
             return;
         }
-
-        string _path = "D:\\Work\\zViewTest\\Client\\Client\\bin\\Debug\\Client.exe";
+        string _path = Path.Combine(Application.streamingAssetsPath, "ClientWin.exe");
         ProcessStartInfo startInfo = new ProcessStartInfo();
         startInfo.FileName = _path;
         startInfo.Arguments = "OpenInUnity";
@@ -105,6 +104,7 @@ public class FView : MonoBehaviour
             }
         }
 
+        //调用c++dll
         ShowInExe(VoxenShareWinInptr, rt.GetNativeTexturePtr(), 1920, 1080);
     }
 
