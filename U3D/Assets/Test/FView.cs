@@ -95,6 +95,7 @@ public class FView : MonoBehaviour
             VoxenShareWinInptr = FindWindow(null, "ViewClient");
             if (VoxenShareWinInptr != IntPtr.Zero)
             {
+                UnityEngine.Debug.Log("FView.OpenFViewWindows():找到了窗口句柄！");
                 int pid = 0;
                 GetWindowThreadProcessId(VoxenShareWinInptr, out pid);
                 if (pid == viewProcess.Id)
@@ -104,6 +105,7 @@ public class FView : MonoBehaviour
             }
         }
 
+        UnityEngine.Debug.Log("FView.OpenFViewWindows():开始绘图！");
         //调用c++dll
         ShowInExe(VoxenShareWinInptr, rt.GetNativeTexturePtr(), 1920, 1080);
     }
