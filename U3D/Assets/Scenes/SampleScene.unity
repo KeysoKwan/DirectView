@@ -423,10 +423,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 816248238}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a3f1f9d4894dbb42a03d59bb14d58ea, type: 3}
+  m_Script: {fileID: 556145652, guid: efe3565405a2fa94eaf564e60e0b62f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isAutoSlant: 1
+  isAutoSlant: 0
   ViewerScale: 1
 --- !u!4 &816248240
 Transform:
@@ -1294,12 +1294,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1950522497}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a5556cfd8a2b9f4784b619759cd37ef, type: 3}
+  m_Script: {fileID: -1007724675, guid: efe3565405a2fa94eaf564e60e0b62f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cam_c: {fileID: 0}
-  cam_l: {fileID: 0}
-  cam_r: {fileID: 0}
+  cam_c: {fileID: 974304903}
+  cam_l: {fileID: 807567926}
+  cam_r: {fileID: 1886807030}
 --- !u!4 &1950522499
 Transform:
   m_ObjectHideFlags: 0

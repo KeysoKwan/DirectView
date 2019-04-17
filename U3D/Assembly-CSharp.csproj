@@ -61,18 +61,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\DTO\FViewRT.cs" />
-    <Compile Include="Assets\FSpace\BaseSystem.cs" />
-    <Compile Include="Assets\FSpace\Camera3D.cs" />
-    <Compile Include="Assets\FSpace\DragRecord.cs" />
-    <Compile Include="Assets\FSpace\FCore.cs" />
-    <Compile Include="Assets\FSpace\MRSystem.cs" />
-    <Compile Include="Assets\FSpace\OCVData.cs" />
     <Compile Include="Assets\FSpace\PenRay.cs" />
     <Compile Include="Assets\FSpace\SimpleDrag.cs" />
     <Compile Include="Assets\Test\FView.cs" />
     <Compile Include="Assets\Test\JsonTypeBind.cs" />
     <Compile Include="Assets\Test\ShowFPS.cs" />
-    <Compile Include="Assets\Test\Test.cs" />
     <None Include="Assets\Resources\FView\UI.shader" />
     <None Include="Assets\Resources\FView\Hide.shader" />
     <Reference Include="Unity.TextMeshPro.Editor">
@@ -302,6 +295,9 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>D:/Work/zViewTest/U3D/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
+    </Reference>
+    <Reference Include="FSpace">
+      <HintPath>D:/Work/zViewTest/U3D/Assets/FSpace/FSpace.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:/Program Files/Unity2018.3.1f1/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>
