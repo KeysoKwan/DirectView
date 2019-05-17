@@ -63,6 +63,7 @@
     <Compile Include="Assets\DTO\FViewRT.cs" />
     <Compile Include="Assets\FSpace\PenRay.cs" />
     <Compile Include="Assets\FSpace\SimpleDrag.cs" />
+    <Compile Include="Assets\Test\CullMesh.cs" />
     <Compile Include="Assets\Test\FView.cs" />
     <Compile Include="Assets\Test\JsonTypeBind.cs" />
     <Compile Include="Assets\Test\ShowFPS.cs" />
@@ -284,6 +285,9 @@
     <Reference Include="UnityEngine.SpatialTracking">
       <HintPath>C:/Program Files/Unity2018.3.1f1/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
+    <Reference Include="FSpace">
+      <HintPath>D:/Work/zViewTest/U3D/Assets/FSpace/FSpace.dll</HintPath>
+    </Reference>
     <Reference Include="xuexue.utility">
       <HintPath>D:/Work/zViewTest/U3D/Assets/Plugins/xuexue.utility.dll</HintPath>
     </Reference>
@@ -295,9 +299,6 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>D:/Work/zViewTest/U3D/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
-    </Reference>
-    <Reference Include="FSpace">
-      <HintPath>D:/Work/zViewTest/U3D/Assets/FSpace/FSpace.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:/Program Files/Unity2018.3.1f1/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>

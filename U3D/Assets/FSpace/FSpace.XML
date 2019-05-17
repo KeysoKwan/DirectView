@@ -22,7 +22,7 @@
         <member name="P:FSpace.BaseSystem.penRotation">
             <summary>
             当前笔的旋转,其中它自己z轴为正前方.
-            </summary>  
+            </summary>
         </member>
         <member name="P:FSpace.BaseSystem.penPosition">
             <summary>
@@ -40,19 +40,19 @@
             </summary>
         </member>
         <member name="P:FSpace.BaseSystem.glassPosition">
-            <summary> 
+            <summary>
             当前眼镜的坐标
             </summary>
         </member>
         <member name="P:FSpace.BaseSystem.glassRotation">
             <summary>
             当前眼镜的旋转,其中它自己z轴为正前方.
-            </summary> 
+            </summary>
         </member>
         <member name="P:FSpace.BaseSystem.glassRotation_horizontal">
             <summary>
             当前眼镜的旋转限制在水平.
-            </summary> 
+            </summary>
         </member>
         <member name="P:FSpace.BaseSystem.eyeLeftPosition">
             <summary>
@@ -297,8 +297,8 @@
             </summary>
         </member>
         <member name="M:FSpace.FCore.addDragObj(UnityEngine.GameObject,System.Single,System.Boolean)">
-            <summary> 
-            添加一个拖拽物体. 
+            <summary>
+            添加一个拖拽物体.
             </summary>
             <param name="go">             要添加的物体. </param>
             <param name="distance">       拖拽的碰撞点坐标的距离. </param>
@@ -465,6 +465,16 @@
         <member name="P:FSpace.FCore.screenCentre">
             <summary>
             屏幕面-中心坐标
+            </summary>
+        </member>
+        <member name="P:FSpace.FCore.screenWidth">
+            <summary>
+            屏幕面-当前宽度
+            </summary>
+        </member>
+        <member name="P:FSpace.FCore.screenHeight">
+            <summary>
+            屏幕面-当前高度
             </summary>
         </member>
         <member name="P:FSpace.FCore.screenRotation">
