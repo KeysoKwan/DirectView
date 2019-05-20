@@ -9,7 +9,7 @@ using xuexue.LitJson;
 namespace DTO
 {
     [xuexueJsonClass]
-    class FViewRT
+    public class FViewRT
     {
         /// <summary> fView相机坐标. </summary>
         public Vector3 viewPosition;

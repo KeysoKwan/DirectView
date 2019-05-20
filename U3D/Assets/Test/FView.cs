@@ -37,7 +37,7 @@ public class FView : MonoBehaviour
     public RawImage riC920;
 
     /// <summary>
-    /// 渲染结果
+    /// 渲染结果纹理
     /// </summary>
     public RenderTexture rt;
 
@@ -54,31 +54,44 @@ public class FView : MonoBehaviour
     /// <summary>
     /// 一个罗技摄像头姿态的记录
     /// </summary>
-    FViewRT fViewRT;
+    FViewRT _fViewRT;
 
     /// <summary>
     /// 显示窗口进程
     /// </summary>
     Process viewProcess;
 
+    /// <summary>
+    /// 考虑接入一个其他的json的方法
+    /// </summary>
+    /// <param name="fViewRT"></param>
+    public void Init(FViewRT fViewRT = null)
+    {
+        this._fViewRT = fViewRT;
+    }
+
+
     private void Awake()
     {
-        //程序一运行就绑定一下
-        JsonTypeBind.Bind();
-        string fViewJsonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FViewTool", "FView.json");
-
-        if (!File.Exists(fViewJsonPath))
+        if (_fViewRT == null)
         {
-            UnityEngine.Debug.LogError("FView.OpenFViewWindows():先使用工具软件进行罗技摄像头的标定！");
+            //程序一运行就绑定一下
+            JsonTypeBind.Bind();
+            string fViewJsonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FViewTool", "FView.json");
+
+            if (!File.Exists(fViewJsonPath))
+            {
+                UnityEngine.Debug.LogError("FView.OpenFViewWindows():先使用工具软件进行罗技摄像头的标定！");
+            }
+
+            //读取json的配置
+            string str = File.ReadAllText(fViewJsonPath);
+            _fViewRT = JsonMapper.ToObject<FViewRT>(str);
         }
 
-        //读取json的配置
-        string str = File.ReadAllText(fViewJsonPath);
-        fViewRT = JsonMapper.ToObject<FViewRT>(str);
-
         //使用标定结果设置CamRoot的坐标
-        transform.localPosition = fViewRT.viewPosition;
-        transform.localRotation = fViewRT.viewRotation;
+        transform.localPosition = _fViewRT.viewPosition;
+        transform.localRotation = _fViewRT.viewRotation;
 
     }
 
@@ -102,6 +115,7 @@ public class FView : MonoBehaviour
         IntPtr curRtPtr = rt.GetNativeTexturePtr();
         if (curRtPtr != rtPtr && _hViewClient != IntPtr.Zero)
         {
+            UnityEngine.Debug.Log("FView.Update():rtPtr值更新！");
             rtPtr = curRtPtr;
             StartView(_hViewClient, rtPtr, 1920, 1080);
         }
