@@ -9,27 +9,27 @@ using namespace DirectX;
 
 class D3d11Show
 {
-public:
+  public:
     D3d11Show();
     ~D3d11Show();
 
-public:
+  public:
     void EndRendering();
     void StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
 
-private:
+  private:
     void RenderTexture(HWND hWnd, void* textureHandle, int w, int h);
-    void RealeaseD3d();
+    void RealeaseD3d(bool isClearhWnd = true);
     void InitD3D(HWND hWnd, void* textureHandle, int w, int h);
     void DoRenderingView();
 
-public:
+  public:
     bool isRendering;
 
-private:
-    ID3D11Device*       m_sDevice;
-    ID3D11DeviceContext*    m_deviceContext;
-    IDXGISwapChain*     m_swapChain;
+  private:
+    ID3D11Device* m_sDevice;
+    ID3D11DeviceContext* m_deviceContext;
+    IDXGISwapChain* m_swapChain;
     ID3D11RenderTargetView* m_renderTargetView;
     ID3D11VertexShader* solidColorVS_;
     ID3D11PixelShader* solidColorPS_;
@@ -42,6 +42,4 @@ private:
     int m_w;
     int m_h;
     HWND m_ViewhWnd;
-
 };
-
