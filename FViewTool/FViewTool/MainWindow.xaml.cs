@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using xuexue;
 
 namespace FViewTool
 {
@@ -30,6 +31,7 @@ namespace FViewTool
 
             _pathParamC920 = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "param", "C920.yml");
 
+            //这个函数以管理员模式运行程序也能找到appdata文件夹没什么问题
             _savePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FViewTool", "FView.json");
             System.IO.FileInfo fi = new System.IO.FileInfo(_savePath);
             if (!System.IO.Directory.Exists(fi.Directory.FullName))
@@ -41,7 +43,7 @@ namespace FViewTool
             _timer.Change(1000, 30);
 
             buff = writableImage.BackBuffer;
-
+            DLog.LogI("savePath=" + _savePath);
             Task.Run(() =>
             {
                 //fview_start(_pathParamC920, "HD Pro Webcam C920", 1280, 720, buff);
