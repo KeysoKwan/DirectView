@@ -73,19 +73,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\dxlib\lib\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\dxlib\lib\eigen;C:\dxlib\lib\rapidjson\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\dxlib\lib\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\dxlib\lib\eigen;C:\dxlib\lib\rapidjson\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\dxlib\lib\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\dxlib\lib\eigen;C:\dxlib\lib\rapidjson\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\dxlib\lib\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\dxlib\lib\eigen;C:\dxlib\lib\rapidjson\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,6 +157,10 @@
     <ClInclude Include="base64.h" />
     <ClInclude Include="crc32.h" />
     <ClInclude Include="D3d11Show.h" />
+    <ClInclude Include="dto\DTOType.h" />
+    <ClInclude Include="dto\FViewRT.h" />
+    <ClInclude Include="dto\JsonHelper.h" />
+    <ClInclude Include="dto\Serialize.h" />
     <ClInclude Include="hidapi.h" />
     <ClInclude Include="MCDevice.h" />
     <ClInclude Include="resource.h" />
