@@ -24,9 +24,6 @@
     <ClInclude Include="D3d11Show.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Show.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="base64.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -42,21 +39,18 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="FView.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="U3DShow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="D3d11Show.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Show.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="base64.cpp">
@@ -68,13 +62,16 @@
     <ClCompile Include="MCDevice.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="U3DShow.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
+    <ClCompile Include="FView.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FView.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -5,6 +5,12 @@
 [Bb]uilds/
 Assets/AssetStoreTools*
 
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
 # Visual Studio cache directory
 .vs/
 
@@ -44,4 +50,4 @@ FViewTool/FViewTool/bin/
 Client/Client/bin/
 U3DShow/U3DShow/x64/
 U3DShow/x64/
-lib/
+/lib/
