@@ -3,7 +3,8 @@
 import os
 import sys
 import getopt
-
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def list_files(startpath):
     dircount = 0
