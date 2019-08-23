@@ -4,6 +4,8 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 using namespace DirectX;
+
+//渲染纹理资源类
 class RenderingResources
 {
   public:
@@ -45,6 +47,7 @@ class RenderingResources
     inline void SafeRelease(Res* ptr)
     {
         if (ptr != 0) ptr->Release();
+		ptr = 0;
     }
 };
 

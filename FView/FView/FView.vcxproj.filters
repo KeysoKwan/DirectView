@@ -54,6 +54,24 @@
     <ClInclude Include="dto\FViewRT.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="kwan\DrawerManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\IUnityGraphics.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\IUnityGraphicsD3D11.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\IUnityInterface.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\RenderingResources.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\RLock.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -77,13 +95,32 @@
     <ClCompile Include="FView.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="kwan\DrawerManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kwan\RenderingResources.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kwan\RLock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="kwan\Tex2DPixelShader.inc">
+      <Filter>头文件</Filter>
+    </None>
+    <None Include="kwan\Tex2DVertexShader.inc">
+      <Filter>头文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FView.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="kwan\Tex2DVertexShader.hlsl" />
+    <FxCompile Include="kwan\Tex2DPixelShader.hlsl" />
   </ItemGroup>
 </Project>

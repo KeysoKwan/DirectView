@@ -14,25 +14,48 @@ using namespace dxlib;
 D3d11Show m_d3d11show;
 dto::FViewRT fviewRT;
 
-_VSAPI_ int fmFViewStart(HWND hWnd, void* textureHandle, int w, int h)
+_VSAPI_ int StartView(HWND hWnd, void* textureHandle, int w, int h)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }
-
-    m_d3d11show.StartRenderingView(hWnd, textureHandle, w, h);
-    return 1;
+    return m_d3d11show.StartRenderingView(hWnd, textureHandle, w, h);
 }
 
-_VSAPI_ void fmFViewStop()
+_VSAPI_ int StartView_LR(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+    	return -1;
+    }
+    return m_d3d11show.StartRenderingView(hWnd, LeftTextureHandle, RightTextureHandle, w, h);
+}
+_VSAPI_ int SwitchProjector(int type)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+        return -1;
+    }
+	//传两张纹理指针的左右3D投屏下，可切换到只显示左画面到投屏窗口或左右一起显示
+	// -----------         ---------
+	// |   L  |   R  |  or   |     L     |
+	// -----------         ----------
+	//如果只传了一张纹理指针，则此函数无效
+    type = type % 2;
+    m_d3d11show.SwichProjector((DrawerManagerU3D::ProjectionType)type);
+    return 1;
+}
+_VSAPI_ void StopView()
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
         return;
     }
+	//安全退出线程并关闭渲染窗口
     m_d3d11show.EndRendering();
 }
+
 
 ///-------------------------------------------------------------------------------------------------
 /// <summary> 独一个json文件路径. </summary>

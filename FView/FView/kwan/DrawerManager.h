@@ -10,16 +10,17 @@ using namespace DirectX;
 #define U3DshowResourcesPTR shared_ptr<RenderingResources>
 #define DrawerManagerU3D DrawerManager<U3DshowResourcesPTR>
 
-enum ProjectionType
-{
-    T_2D = 0,
-    T_3Dleftright = 1
-};
-
+//‰÷»æπ‹¿Ì¿‡
 template <typename Resource>
 class DrawerManager
 {
   public:
+    enum ProjectionType
+    {
+        T_2D = 0,
+        T_3Dleftright = 1
+    };
+
     DrawerManager<Resource>();
     DrawerManager<Resource>(ID3D11Device* d3dDevice);
     ~DrawerManager<Resource>();

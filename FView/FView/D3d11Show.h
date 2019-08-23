@@ -1,10 +1,12 @@
 ﻿#pragma once
 
 #include <d3d11.h>
-//#include "D3DX11/include/D3DX11.h"
 #include <d3dcompiler.h>
-//#include "D3DX11/include/xnamath.h"
 #include <DirectXMath.h>
+#include <memory>
+#include "kwan/DrawerManager.h"
+#include "kwan/RenderingResources.h"
+#include <thread>
 using namespace DirectX;
 
 class D3d11Show
@@ -15,13 +17,18 @@ class D3d11Show
 
   public:
     void EndRendering();
-    void StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
+	//原来的调用方法
+    int StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
+    //为了不改变原有的接口，所以新增了一个方法，输入left right两张纹理指针绘制双屏
+    int StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTexturePTR, int w, int h);
+    void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
+    void SwichProjector(DrawerManagerU3D::ProjectionType type);
 
   private:
-    void RenderTexture(HWND hWnd, void* textureHandle, int w, int h);
+    void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
-    void InitD3D(HWND hWnd, void* textureHandle, int w, int h);
-    void DoRenderingView();
+    void InitD3D(HWND hWnd, int w, int h);
+    void DoRenderingView(int count, ...);
 
   public:
     bool isRendering;
@@ -34,12 +41,25 @@ class D3d11Show
     ID3D11VertexShader* solidColorVS_;
     ID3D11PixelShader* solidColorPS_;
     ID3D11InputLayout* inputLayout_;
-    ID3D11Buffer* vertexBuffer_;
-    ID3D11ShaderResourceView* colorMap_;
     ID3D11SamplerState* colorMapSampler_;
 
-    void* m_textureHandle;
+    //新增渲染类智能指针对象
+    unique_ptr<DrawerManagerU3D> m_drawer = NULL;
+
     int m_w;
     int m_h;
     HWND m_ViewhWnd;
+
+    bool m_isInit;
+    //线程与线程安全对象
+    thread m_renderingThread;
+    HANDLE m_hSemaphore = NULL;
+    const char* m_SemaphoreName = "D3D11SHOW_sem";
+	//安全释放资源
+	template<typename Res>
+	inline void SafeRelease(Res* ptr)
+	{
+		if (ptr != 0) ptr->Release();
+		ptr = 0;
+	}
 };
