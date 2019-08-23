@@ -20,7 +20,7 @@ class D3d11Show
 
   public:
     void EndRendering();
-	//原来的调用方法
+    //原来的调用方法
     int StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
     //为了不改变原有的接口，所以新增了一个方法，输入left right两张纹理指针绘制双屏
     int StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTexturePTR, int w, int h);
@@ -58,11 +58,11 @@ class D3d11Show
     thread m_renderingThread;
     HANDLE m_hSemaphore = NULL;
     const char* m_SemaphoreName = "D3D11SHOW_sem";
-	//安全释放资源
-	template<typename Res>
-	inline void SafeRelease(Res* ptr)
-	{
-		if (ptr != 0) ptr->Release();
-		ptr = 0;
-	}
+    //安全释放资源
+    template <typename Res>
+    inline void SafeRelease(Res* ptr)
+    {
+        if (ptr != 0) ptr->Release();
+        ptr = 0;
+    }
 };

@@ -220,11 +220,11 @@ void D3d11Show::RenderTexture()
 
 void D3d11Show::EndRendering()
 {
-	isRendering = false;
-	WaitForSingleObject(m_hSemaphore, 200);
-	if (m_ViewhWnd != NULL) {
-		::PostMessage(m_ViewhWnd, WM_QUIT, 0, 0);
-	}
+    isRendering = false;
+    WaitForSingleObject(m_hSemaphore, 200);
+    if (m_ViewhWnd != NULL) {
+        ::PostMessage(m_ViewhWnd, WM_QUIT, 0, 0);
+    }
 }
 
 void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type)
