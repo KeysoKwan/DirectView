@@ -7,9 +7,6 @@
 using namespace std;
 using namespace DirectX;
 
-#define U3DshowResourcesPTR shared_ptr<RenderingResources>
-#define DrawerManagerU3D DrawerManager<U3DshowResourcesPTR>
-
 //‰÷»æπ‹¿Ì¿‡
 template <typename Resource>
 class DrawerManager

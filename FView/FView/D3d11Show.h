@@ -9,6 +9,9 @@
 #include <thread>
 using namespace DirectX;
 
+using U3DshowResourcesPTR = std::shared_ptr<RenderingResources>;
+using DrawerManagerU3D = DrawerManager<shared_ptr<RenderingResources>>;
+
 class D3d11Show
 {
   public:
