@@ -1,4 +1,4 @@
-#include "RenderingResources.h"
+﻿#include "RenderingResources.h"
 
 RenderingResources::RenderingResources()
 {

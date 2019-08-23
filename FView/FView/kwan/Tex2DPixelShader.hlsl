@@ -1,4 +1,4 @@
-//ÏñËØ×ÅÉ«Æ÷ÎÄ¼ş
+ï»¿//åƒç´ ç€è‰²å™¨æ–‡ä»¶
 
 Texture2D colorMap_ : register(t0);
 SamplerState colorSampler_ : register(s0);

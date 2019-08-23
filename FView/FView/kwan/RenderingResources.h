@@ -1,11 +1,11 @@
-#ifndef RENDERINGRESOURCES_H
+ï»¿#ifndef RENDERINGRESOURCES_H
 #define RENDERINGRESOURCES_H
 
 #include <d3d11.h>
 #include <DirectXMath.h>
 using namespace DirectX;
 
-//äÖÈ¾ÎÆÀí×ÊÔ´Àà
+//æ¸²æŸ“çº¹ç†èµ„æºç±»
 class RenderingResources
 {
   public:

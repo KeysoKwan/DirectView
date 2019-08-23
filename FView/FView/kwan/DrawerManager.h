@@ -1,4 +1,4 @@
-#ifndef DrawerManager_H
+ï»¿#ifndef DrawerManager_H
 #define DrawerManager_H
 
 #include <vector>
@@ -7,7 +7,7 @@
 using namespace std;
 using namespace DirectX;
 
-//äÖÈ¾¹ÜÀíÀà
+//æ¸²æŸ“ç®¡ç†ç±»
 template <typename Resource>
 class DrawerManager
 {
@@ -24,17 +24,17 @@ class DrawerManager
 
     int GetManagerSize() const;
 
-    //Ìí¼ÓäÖÈ¾ÔªËØ
+    //æ·»åŠ æ¸²æŸ“å…ƒç´ 
     bool PushResources(Resource&& in_res);
-    //É¾³ıÄ©¶ËäÖÈ¾ÔªËØ
+    //åˆ é™¤æœ«ç«¯æ¸²æŸ“å…ƒç´ 
     bool PopResources();
-    //É¾³ıÖ¸¶¨äÖÈ¾ÔªËØ
+    //åˆ é™¤æŒ‡å®šæ¸²æŸ“å…ƒç´ 
     bool PopResources(int index);
-    //Çå¿ÕäÖÈ¾ÔªËØ
+    //æ¸…ç©ºæ¸²æŸ“å…ƒç´ 
     bool ClearResources();
-    //äÖÈ¾µ½ÔªËØ
+    //æ¸²æŸ“åˆ°å…ƒç´ 
     void RenderAllResource(ID3D11DeviceContext* ctx);
-    //¸üĞÂÅÅÁĞäÖÈ¾¾ØÕó
+    //æ›´æ–°æ’åˆ—æ¸²æŸ“çŸ©é˜µ
     void UpdateAllMatrix(ProjectionType type);
 
   private:
@@ -134,7 +134,7 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 {
     if (ctx != NULL) {
         vector<Resource>::iterator iter;
-        for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) //±éÀúäÖÈ¾Õû¸öÈİÆ÷
+        for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) //éå†æ¸²æŸ“æ•´ä¸ªå®¹å™¨
         {
             (*iter)->Render(ctx, 6);
         }
@@ -187,5 +187,4 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
     }
     ctx->Release();
 }
-
 #endif

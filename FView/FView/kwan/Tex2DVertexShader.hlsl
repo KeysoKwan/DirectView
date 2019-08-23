@@ -1,4 +1,4 @@
-//¶¥µã×ÅÉ«Æ÷ÎÄ¼ş
+ï»¿//é¡¶ç‚¹ç€è‰²å™¨æ–‡ä»¶
 
 cbuffer ConstantBuffer : register(b0)
 {
