@@ -2,7 +2,6 @@
 using FSpace;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,12 +11,8 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-public class FView : MonoBehaviour
+public class FAR : MonoBehaviour
 {
-
-    [DllImport("FView")]
-    private static extern void StartView(System.IntPtr hWnd, System.IntPtr textureHandle, int w, int h);
-
     //寻找当前目标窗口的进程
     [DllImport("user32.dll")]
     private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -39,12 +34,7 @@ public class FView : MonoBehaviour
     /// <summary>
     /// 渲染结果纹理
     /// </summary>
-    public RenderTexture rt;
-
-    /// <summary>
-    /// 渲染纹理指针
-    /// </summary>
-    private IntPtr rtPtr = IntPtr.Zero;
+    public Camera ARcam;
 
     /// <summary>
     /// 显示窗口句柄
@@ -81,7 +71,7 @@ public class FView : MonoBehaviour
 
             if (!File.Exists(fViewJsonPath))
             {
-                UnityEngine.Debug.LogError("FView.OpenFViewWindows():先使用工具软件进行罗技摄像头的标定！");
+                UnityEngine.Debug.LogError("FAR.OpenFARWindows():先使用工具软件进行罗技摄像头的标定！");
             }
 
             //读取json的配置
@@ -92,7 +82,9 @@ public class FView : MonoBehaviour
         //使用标定结果设置CamRoot的坐标
         transform.localPosition = _fViewRT.viewPosition;
         transform.localRotation = _fViewRT.viewRotation;
-
+        //创建一个新的渲染纹理并绑定到ARcam
+        RenderTexture temp_RT = new RenderTexture((int)(FARSingleton.SwapchainWidth), (int)(FARSingleton.SwapchanHeight), 0);
+        ARcam.targetTexture = temp_RT;
     }
 
     // Use this for initialization
@@ -101,27 +93,10 @@ public class FView : MonoBehaviour
         StartCoroutine(InitCamera());
         await Task.Delay(3000);
 
-        OpenFViewWindows();
+        OpenFARWindows();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.V))
-        {
-            OpenFViewWindows();
-        }
-
-        IntPtr curRtPtr = rt.GetNativeTexturePtr();
-        if (curRtPtr != rtPtr && _hViewClient != IntPtr.Zero)
-        {
-            UnityEngine.Debug.Log("FView.Update():rtPtr值更新！");
-            rtPtr = curRtPtr;
-            StartView(_hViewClient, rtPtr, 1920, 1080);
-        }
-    }
-
-    private void OpenFViewWindows()
+    private void OpenFARWindows()
     {
         if (viewProcess != null)
         {
@@ -134,34 +109,29 @@ public class FView : MonoBehaviour
         viewProcess.StartInfo = startInfo;
         viewProcess.Start();
 
-
         _hViewClient = IntPtr.Zero;
         while (true)
         {
             _hViewClient = FindWindow(null, "ViewClient");
             if (_hViewClient != IntPtr.Zero)
             {
-                UnityEngine.Debug.Log("FView.OpenFViewWindows():找到了窗口句柄！");
+                UnityEngine.Debug.Log("FAR.OpenFARWindows():找到了窗口句柄！");
                 int pid = 0;
                 GetWindowThreadProcessId(_hViewClient, out pid);
+                //绑定ARcam纹理指针到投屏窗口
+                FARSingleton.GetInstance().StartView(_hViewClient, ARcam.targetTexture.GetNativeTexturePtr());
                 if (pid == viewProcess.Id)
                 {
                     break;
                 }
             }
         }
-
-        UnityEngine.Debug.Log("FView.OpenFViewWindows():开始绘图！");
-
+        UnityEngine.Debug.Log("FAR.OpenFARWindows():开始绘图！");
     }
 
     private void OnApplicationQuit()
     {
-        if (viewProcess != null)
-        {
-            viewProcess.Kill();
-        }
-
+        FARSingleton.GetInstance().CloseDown();
     }
 
     /// <summary>
@@ -170,7 +140,6 @@ public class FView : MonoBehaviour
     /// <returns></returns>
     IEnumerator InitCamera()
     {
-
         //获取授权
         yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
         if (Application.HasUserAuthorization(UserAuthorization.WebCam))
