@@ -32,7 +32,7 @@ public class FAR : MonoBehaviour
     public RawImage riC920;
 
     /// <summary>
-    /// 渲染结果纹理
+    /// 渲染结果相机
     /// </summary>
     public Camera ARcam;
 
@@ -82,7 +82,7 @@ public class FAR : MonoBehaviour
         //使用标定结果设置CamRoot的坐标
         transform.localPosition = _fViewRT.viewPosition;
         transform.localRotation = _fViewRT.viewRotation;
-        //创建一个新的渲染纹理并绑定到ARcam
+        //创建一个新的渲染目标纹理并绑定到ARcam
         RenderTexture temp_RT = new RenderTexture((int)(FARSingleton.SwapchainWidth), (int)(FARSingleton.SwapchanHeight), 0);
         ARcam.targetTexture = temp_RT;
     }
@@ -117,11 +117,11 @@ public class FAR : MonoBehaviour
             {
                 UnityEngine.Debug.Log("FAR.OpenFARWindows():找到了窗口句柄！");
                 int pid = 0;
-                GetWindowThreadProcessId(_hViewClient, out pid);
-                //绑定ARcam纹理指针到投屏窗口
-                FARSingleton.GetInstance().StartView(_hViewClient, ARcam.targetTexture.GetNativeTexturePtr());
+                GetWindowThreadProcessId(_hViewClient, out pid);               
                 if (pid == viewProcess.Id)
                 {
+                    //开始绘制同屏窗口，如目标纹理指针变更可随时调用
+                    FARSingleton.GetInstance().StartView(_hViewClient, ARcam.targetTexture.GetNativeTexturePtr());
                     break;
                 }
             }
