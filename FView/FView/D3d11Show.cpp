@@ -20,7 +20,7 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          colorMapSampler_(NULL),
                          isRendering(false),
                          m_ViewhWnd(NULL),
-                        m_isGamaSpace(Gama),
+                         m_isGamaSpace(Gama),
                          m_w(0),
                          m_h(0),
                          m_isInit(false)
@@ -132,23 +132,20 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"创建顶点着色器失败!", L"error", MB_OK);
         return;
     }
-    if (m_isGamaSpace == Gama)
-    {
+    if (m_isGamaSpace == Gama) {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
             MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             return;
         }
     }
-    else
-    {
+    else {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShaderLinearSpace, sizeof(g_Tex2DPixelShaderLinearSpace), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
             MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             return;
         }
     }
-   
 
     // input layout
     if (solidColorVS_) {

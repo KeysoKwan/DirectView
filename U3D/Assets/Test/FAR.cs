@@ -117,7 +117,7 @@ public class FAR : MonoBehaviour
             {
                 UnityEngine.Debug.Log("FAR.OpenFARWindows():找到了窗口句柄！");
                 int pid = 0;
-                GetWindowThreadProcessId(_hViewClient, out pid);               
+                GetWindowThreadProcessId(_hViewClient, out pid);
                 if (pid == viewProcess.Id)
                 {
                     //设置当前的色彩空间，u3d默认是Gama空间
