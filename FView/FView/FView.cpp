@@ -46,6 +46,18 @@ _VSAPI_ int SwitchProjector(int type)
     m_d3d11show.SwichProjector((DrawerManagerU3D::ProjectionType)type);
     return 1;
 }
+
+_VSAPI_ void IsGamaSpace(int space)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+        return;
+    }
+    //切换Gama与Linner色彩空间
+    space %= 2;
+    m_d3d11show.SetGamaSpace((D3d11Show::U3DColorSpace)space);
+}
+
 _VSAPI_ void StopView()
 {
     //如果不在我们自己的机器上,那么就直接返回

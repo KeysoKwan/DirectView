@@ -120,6 +120,8 @@ public class FAR : MonoBehaviour
                 GetWindowThreadProcessId(_hViewClient, out pid);               
                 if (pid == viewProcess.Id)
                 {
+                    //设置当前的色彩空间，u3d默认是Gama空间
+                    FARSingleton.GetInstance().SetColorSpace(FARSingleton.U3DColorSpace.Gama);
                     //开始绘制同屏窗口，如目标纹理指针变更可随时调用
                     FARSingleton.GetInstance().StartView(_hViewClient, ARcam.targetTexture.GetNativeTexturePtr());
                     break;

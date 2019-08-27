@@ -1,5 +1,3 @@
-﻿//顶点着色器文件
-
 cbuffer ConstantBuffer : register(b0)
 {
     matrix World;

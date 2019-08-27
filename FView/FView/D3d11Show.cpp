@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "kwan/Tex2DPixelShader.inc"
 #include "kwan/Tex2DVertexShader.inc"
+#include "kwan/Tex2DPixelShaderLinearSpace.inc"
 #pragma comment(lib, "d3d11.lib")
 
 using namespace std;
@@ -19,6 +20,7 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          colorMapSampler_(NULL),
                          isRendering(false),
                          m_ViewhWnd(NULL),
+                        m_isGamaSpace(Gama),
                          m_w(0),
                          m_h(0),
                          m_isInit(false)
@@ -130,11 +132,23 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"创建顶点着色器失败!", L"error", MB_OK);
         return;
     }
-    hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
-    if (FAILED(hr)) {
-        MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
-        return;
+    if (m_isGamaSpace == Gama)
+    {
+        hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
+        if (FAILED(hr)) {
+            MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
+            return;
+        }
     }
+    else
+    {
+        hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShaderLinearSpace, sizeof(g_Tex2DPixelShaderLinearSpace), nullptr, &solidColorPS_);
+        if (FAILED(hr)) {
+            MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
+            return;
+        }
+    }
+   
 
     // input layout
     if (solidColorVS_) {
@@ -237,6 +251,11 @@ void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Reso
 void D3d11Show::SwichProjector(DrawerManagerU3D::ProjectionType type)
 {
     m_drawer->UpdateAllMatrix(type);
+}
+
+void D3d11Show::SetGamaSpace(U3DColorSpace space)
+{
+    m_isGamaSpace = space;
 }
 
 int D3d11Show::StartRenderingView(HWND hWnd, void* textureHandle, int w, int h)

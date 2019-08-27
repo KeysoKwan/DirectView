@@ -1,5 +1,3 @@
-﻿//像素着色器文件
-
 Texture2D colorMap_ : register(t0);
 SamplerState colorSampler_ : register(s0);
 

@@ -19,6 +19,11 @@ class D3d11Show
     ~D3d11Show();
 
   public:
+    enum U3DColorSpace
+    {
+        Gama = 0,
+        Linear = 1
+    };
     void EndRendering();
     //原来的调用方法
     int StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
@@ -26,6 +31,8 @@ class D3d11Show
     int StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTexturePTR, int w, int h);
     void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
     void SwichProjector(DrawerManagerU3D::ProjectionType type);
+
+    void SetGamaSpace(U3DColorSpace space);
 
   private:
     void RenderTexture();
@@ -49,6 +56,7 @@ class D3d11Show
     //新增渲染类智能指针对象
     unique_ptr<DrawerManagerU3D> m_drawer = NULL;
 
+    U3DColorSpace m_isGamaSpace;
     int m_w;
     int m_h;
     HWND m_ViewhWnd;

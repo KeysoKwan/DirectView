@@ -194,6 +194,7 @@
   <ItemGroup>
     <None Include=".clang-format" />
     <None Include="kwan\Tex2DPixelShader.inc" />
+    <None Include="kwan\Tex2DPixelShaderLinearSpace.inc" />
     <None Include="kwan\Tex2DVertexShader.inc" />
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +213,13 @@
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">g_%(Filename)</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">kwan\%(Filename).inc</HeaderFileOutput>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="kwan\Tex2DPixelShaderLinearSpace.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PS_Main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">g_%(Filename)</VariableName>
+      <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">kwan\%(Filename).inc</HeaderFileOutput>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="kwan\Tex2DVertexShader.hlsl">

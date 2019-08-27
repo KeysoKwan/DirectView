@@ -11,6 +11,8 @@ namespace FSpace
         [DllImport("f-ar")]
         private static extern void SwitchProjector(int type);
         [DllImport("f-ar")]
+        private static extern void IsGamaSpace(int cSpace);
+        [DllImport("f-ar")]
         private static extern void StopView();
 
         public static FARSingleton GetInstance()
@@ -18,7 +20,11 @@ namespace FSpace
             if (m_fviewInstance == null) m_fviewInstance = new FARSingleton();
             return m_fviewInstance;
         }
-
+        public enum U3DColorSpace
+        {
+            Gama = 0,
+            Linear = 1
+        }
         public enum ProjectorType
         {
             _2D = 0,//2D投影
@@ -53,6 +59,20 @@ namespace FSpace
         {
             errorCode = StartView_LR(hWnd, leftNativePTR, rightNativePTR, SwapchainWidth, SwapchanHeight);
             return errorCode;
+        }
+
+        public void SetColorSpace(U3DColorSpace cSpace)
+        {
+#if UNITY_EDITOR
+            if (UnityEditor.PlayerSettings.colorSpace == UnityEngine.ColorSpace.Linear)
+            {
+                IsGamaSpace((int)U3DColorSpace.Linear);
+            }
+            else
+                IsGamaSpace((int)U3DColorSpace.Gama);
+#else
+            IsGamaSpace((int)cSpace);
+#endif
         }
 
         /// <summary>

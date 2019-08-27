@@ -113,6 +113,9 @@
     <None Include="kwan\Tex2DVertexShader.inc">
       <Filter>头文件</Filter>
     </None>
+    <None Include="kwan\Tex2DPixelShaderLinearSpace.inc">
+      <Filter>头文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FView.rc">
@@ -122,5 +125,6 @@
   <ItemGroup>
     <FxCompile Include="kwan\Tex2DVertexShader.hlsl" />
     <FxCompile Include="kwan\Tex2DPixelShader.hlsl" />
+    <FxCompile Include="kwan\Tex2DPixelShaderLinearSpace.hlsl" />
   </ItemGroup>
 </Project>
