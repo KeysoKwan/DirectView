@@ -19,7 +19,7 @@ class D3d11Show
     ~D3d11Show();
 
   public:
-    enum U3DColorSpace
+    enum class U3DColorSpace
     {
         Gama = 0,
         Linear = 1

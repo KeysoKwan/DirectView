@@ -9,14 +9,14 @@ using namespace DirectX;
 class RenderingResources
 {
   public:
-    enum ResourceViewport
+    enum class ResourceViewport
     {
         FULL_VIEW = 0,
         LEFT_HALF = 1,
         RIGHT_HALF = 2
     };
     RenderingResources();
-    RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp = FULL_VIEW);
+    RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp = ResourceViewport::FULL_VIEW);
     ~RenderingResources();
     void UpdateMVPMatrix();
     void Render(ID3D11DeviceContext* ctx, UINT index) const;
@@ -42,12 +42,12 @@ class RenderingResources
     ID3D11Buffer* m_MVPbuffer;
     CommandBuffer m_commandBuffer;
     XMMATRIX _MVPmatrix;
-    ResourceViewport m_vp = FULL_VIEW;
+    ResourceViewport m_vp = ResourceViewport::FULL_VIEW;
     template <typename Res>
     inline void SafeRelease(Res* ptr)
     {
         if (ptr != 0) ptr->Release();
-		ptr = 0;
+        ptr = 0;
     }
 };
 

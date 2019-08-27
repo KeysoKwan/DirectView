@@ -20,7 +20,7 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          colorMapSampler_(NULL),
                          isRendering(false),
                          m_ViewhWnd(NULL),
-                         m_isGamaSpace(Gama),
+                         m_isGamaSpace(U3DColorSpace::Gama),
                          m_w(0),
                          m_h(0),
                          m_isInit(false)
@@ -132,7 +132,7 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"创建顶点着色器失败!", L"error", MB_OK);
         return;
     }
-    if (m_isGamaSpace == Gama) {
+    if (m_isGamaSpace == U3DColorSpace::Gama) {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
             MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
@@ -321,16 +321,16 @@ void D3d11Show::DoRenderingView(int count, ...)
     for (int i = 0; i < count; i++) {
         nArgValue = va_arg(arg_ptr, void*);
         if (count == 1)
-            SetupTextureHandle(nArgValue, RenderingResources::FULL_VIEW);
+            SetupTextureHandle(nArgValue, RenderingResources::ResourceViewport::FULL_VIEW);
         else
             SetupTextureHandle(nArgValue, (RenderingResources::ResourceViewport)(i + 1));
     }
     va_end(arg_ptr);
     if (count == 2) {
-        m_drawer->UpdateAllMatrix(DrawerManagerU3D::T_3Dleftright);
+        m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_3Dleftright);
     }
     else
-        m_drawer->UpdateAllMatrix(DrawerManagerU3D::T_2D);
+        m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_2D);
 
     m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
     WaitForSingleObject(m_hSemaphore, 100);

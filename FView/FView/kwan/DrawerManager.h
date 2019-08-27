@@ -12,7 +12,7 @@ template <typename Resource>
 class DrawerManager
 {
   public:
-    enum ProjectionType
+    enum class ProjectionType
     {
         T_2D = 0,
         T_3Dleftright = 1
@@ -152,12 +152,12 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
     m_d3dDevice->GetImmediateContext(&ctx);
 
     switch (type) {
-    case T_2D:
-        if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::LEFT_HALF) {
+    case ProjectionType::T_2D:
+        if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
         }
-        else if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::RIGHT_HALF) {
+        else if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.5f, 0.0f, -1.0, 1.0f), XMVectorSet(0.5f, 0.0f, 1.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
         }
@@ -166,7 +166,7 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
         }
         break;
-    case T_3Dleftright:
+    case ProjectionType::T_3Dleftright:
         m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
         m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
         break;

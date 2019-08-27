@@ -27,9 +27,9 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
             {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
         };
     switch (m_vp) {
-    case FULL_VIEW:
+    case ResourceViewport::FULL_VIEW:
         break;
-    case LEFT_HALF:
+    case ResourceViewport::LEFT_HALF:
         vertices[0].tex0.x = 0.5f;
         vertices[1].tex0.x = 0.5f;
         vertices[5].tex0.x = 0.5f;
@@ -44,7 +44,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
                 {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
             };*/
         break;
-    case RIGHT_HALF:
+    case ResourceViewport::RIGHT_HALF:
         vertices[2].tex0.x = 0.5f;
         vertices[3].tex0.x = 0.5f;
         vertices[4].tex0.x = 0.5f;
@@ -109,13 +109,13 @@ void RenderingResources::UpdateMVPMatrix()
     m_device->GetImmediateContext(&ctx);
 
     switch (m_vp) {
-    case FULL_VIEW:
+    case ResourceViewport::FULL_VIEW:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
         break;
-    case LEFT_HALF:
+    case ResourceViewport::LEFT_HALF:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(-0.5, 0.0, 0.0));
         break;
-    case RIGHT_HALF:
+    case ResourceViewport::RIGHT_HALF:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 1.0)) /* * XMMatrixScaling(2.0, 1, 1)*/;
         break;
     default:
