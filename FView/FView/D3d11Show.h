@@ -9,7 +9,6 @@
 #include <thread>
 
 namespace dxshow {
-using U3DshowResourcesPTR = std::shared_ptr<RenderingResources>;
 using DrawerManagerU3D = DrawerManager<std::shared_ptr<RenderingResources>>;
 
 class D3d11Show
@@ -54,7 +53,7 @@ class D3d11Show
     ID3D11SamplerState* colorMapSampler_;
 
     //新增渲染类智能指针对象
-    std::unique_ptr<DrawerManagerU3D> m_drawer = NULL;
+    std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
 
     U3DColorSpace m_isGamaSpace;
     int m_w;

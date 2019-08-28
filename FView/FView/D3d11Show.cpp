@@ -180,7 +180,7 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
         return;
     }
-    m_drawer = std::unique_ptr<DrawerManagerU3D>(new DrawerManagerU3D(m_sDevice));
+    m_drawer = std::make_unique<DrawerManagerU3D>(m_sDevice);
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
@@ -239,7 +239,7 @@ void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Reso
 {
     if (m_sDevice == NULL || textureHandle == 0)
         return;
-    m_drawer->PushResources(U3DshowResourcesPTR(new RenderingResources(m_sDevice, (ID3D11Texture2D*)textureHandle, type)));
+    m_drawer->PushResources(std::make_unique<RenderingResources>(m_sDevice, (ID3D11Texture2D*)textureHandle, type));
 }
 
 void D3d11Show::SwichProjector(DrawerManagerU3D::ProjectionType type)
