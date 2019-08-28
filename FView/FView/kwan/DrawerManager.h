@@ -133,8 +133,8 @@ template <typename Resource>
 void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 {
     if (ctx != NULL) {
-        vector<Resource>::iterator iter;
-        for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
+        typename vector<Resource>::iterator iter = m_resourcesStarck.begin();
+        for (iter; iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
         {
             (*iter)->Render(ctx, 6);
         }
@@ -181,7 +181,7 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
     ctx->UpdateSubresource(m_projectBuffer, 0, NULL, &m_projectMatrix, 0, 0);
     ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
 
-    vector<Resource>::iterator iter;
+    typename vector<Resource>::iterator iter;
     for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
         (*iter)->UpdateMVPMatrix();
     }
