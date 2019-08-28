@@ -7,9 +7,7 @@
 #include "kwan/Tex2DPixelShaderLinearSpace.inc"
 #pragma comment(lib, "d3d11.lib")
 
-using namespace std;
-using namespace DirectX;
-
+namespace dxshow {
 D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_deviceContext(NULL),
                          m_swapChain(NULL),
@@ -59,7 +57,6 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"Create Device failed!", L"error", MB_OK);
         return;
     }
-
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
     m_sDevice->CheckMultisampleQualityLevels(
@@ -183,7 +180,7 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
         return;
     }
-    m_drawer = unique_ptr<DrawerManagerU3D>(new DrawerManagerU3D(m_sDevice));
+    m_drawer = std::unique_ptr<DrawerManagerU3D>(new DrawerManagerU3D(m_sDevice));
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
@@ -278,7 +275,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, void* textureHandle, int w, int h)
     m_w = w;
     m_h = h;
     isRendering = true;
-    thread t(&D3d11Show::DoRenderingView, this, 1, textureHandle);
+    std::thread t(&D3d11Show::DoRenderingView, this, 1, textureHandle);
     t.detach();
     return 1;
 }
@@ -306,7 +303,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTe
     m_w = w;
     m_h = h;
     isRendering = true;
-    m_renderingThread = thread(&D3d11Show::DoRenderingView, this, 2, leftTexturePTR, rightTexturePTR);
+    m_renderingThread = std::thread(&D3d11Show::DoRenderingView, this, 2, leftTexturePTR, rightTexturePTR);
     m_renderingThread.detach();
     return 1;
 }
@@ -352,3 +349,4 @@ void D3d11Show::DoRenderingView(int count, ...)
     }
     ReleaseSemaphore(m_hSemaphore, 1, NULL);
 }
+} // namespace dxshow

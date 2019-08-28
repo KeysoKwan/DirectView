@@ -7,10 +7,10 @@
 #include "kwan/DrawerManager.h"
 #include "kwan/RenderingResources.h"
 #include <thread>
-using namespace DirectX;
 
+namespace dxshow {
 using U3DshowResourcesPTR = std::shared_ptr<RenderingResources>;
-using DrawerManagerU3D = DrawerManager<shared_ptr<RenderingResources>>;
+using DrawerManagerU3D = DrawerManager<std::shared_ptr<RenderingResources>>;
 
 class D3d11Show
 {
@@ -54,7 +54,7 @@ class D3d11Show
     ID3D11SamplerState* colorMapSampler_;
 
     //新增渲染类智能指针对象
-    unique_ptr<DrawerManagerU3D> m_drawer = NULL;
+    std::unique_ptr<DrawerManagerU3D> m_drawer = NULL;
 
     U3DColorSpace m_isGamaSpace;
     int m_w;
@@ -63,7 +63,7 @@ class D3d11Show
 
     bool m_isInit;
     //线程与线程安全对象
-    thread m_renderingThread;
+    std::thread m_renderingThread;
     HANDLE m_hSemaphore = NULL;
     const char* m_SemaphoreName = "D3D11SHOW_sem";
     //安全释放资源
@@ -74,3 +74,4 @@ class D3d11Show
         ptr = 0;
     }
 };
+} // namespace dxshow

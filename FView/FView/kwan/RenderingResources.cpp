@@ -1,11 +1,13 @@
 ﻿#include "RenderingResources.h"
 
+namespace dxshow {
 RenderingResources::RenderingResources()
 {
 }
 
 RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : m_device(device), m_d3dtex(d3dtex), m_vp(vp)
 {
+    using namespace DirectX;
     //m_device = device;
     //m_d3dtex = d3dtex;
     D3D11_BUFFER_DESC vertexDesc;
@@ -34,30 +36,30 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
         vertices[1].tex0.x = 0.5f;
         vertices[5].tex0.x = 0.5f;
         /*VertexPos vertices[] =
-            {
-                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
-                {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
-                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+                {
+                    {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
+                    {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
+                    {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
 
-                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
-                {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
-                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
-            };*/
+                    {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+                    {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+                    {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
+                };*/
         break;
     case ResourceViewport::RIGHT_HALF:
         vertices[2].tex0.x = 0.5f;
         vertices[3].tex0.x = 0.5f;
         vertices[4].tex0.x = 0.5f;
         /*VertexPos vertices[] =
-            {
-                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
-                {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
-                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
+                {
+                    {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+                    {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+                    {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
 
-                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
-                {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
-                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
-            };*/
+                    {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.5f, 0.0f)},
+                    {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
+                    {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+                };*/
         break;
     default:
         break;
@@ -105,6 +107,7 @@ RenderingResources::~RenderingResources()
 
 void RenderingResources::UpdateMVPMatrix()
 {
+    using namespace DirectX;
     ID3D11DeviceContext* ctx = NULL;
     m_device->GetImmediateContext(&ctx);
 
@@ -145,3 +148,4 @@ RenderingResources::ResourceViewport RenderingResources::GetResourceVieportType(
 {
     return m_vp;
 }
+} // namespace dxshow

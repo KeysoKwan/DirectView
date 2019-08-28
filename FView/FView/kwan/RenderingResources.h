@@ -3,8 +3,8 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
-using namespace DirectX;
 
+namespace dxshow {
 //渲染纹理资源类
 class RenderingResources
 {
@@ -27,12 +27,12 @@ class RenderingResources
     RenderingResources(RenderingResources& copy) {}
     struct VertexPos
     {
-        XMFLOAT3 pos;
-        XMFLOAT2 tex0;
+        DirectX::XMFLOAT3 pos;
+        DirectX::XMFLOAT2 tex0;
     };
     struct CommandBuffer
     {
-        XMMATRIX _world;
+        DirectX::XMMATRIX _world;
     };
 
     ID3D11Device* m_device;
@@ -41,7 +41,7 @@ class RenderingResources
     ID3D11ShaderResourceView* m_ResourceView;
     ID3D11Buffer* m_MVPbuffer;
     CommandBuffer m_commandBuffer;
-    XMMATRIX _MVPmatrix;
+    DirectX::XMMATRIX _MVPmatrix;
     ResourceViewport m_vp = ResourceViewport::FULL_VIEW;
     template <typename Res>
     inline void SafeRelease(Res* ptr)
@@ -50,5 +50,5 @@ class RenderingResources
         ptr = 0;
     }
 };
-
+} // namespace dxshow
 #endif

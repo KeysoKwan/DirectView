@@ -5,15 +5,15 @@ namespace FSpace
     public class FARSingleton//为了可切换场景，封装一个全局类
     {
         [DllImport("f-ar")]
-        private static extern int StartView(System.IntPtr hWnd, System.IntPtr textureHandle, int w, int h);
+        private static extern int fmARStartViewDX11(System.IntPtr hWnd, System.IntPtr textureHandle, int w, int h);
         [DllImport("f-ar")]
-        private static extern int StartView_LR(System.IntPtr hWnd, System.IntPtr LeftTextureHandle, System.IntPtr ReftTextureHandle, int w, int h);
+        private static extern int fmARStartView_LRDX11(System.IntPtr hWnd, System.IntPtr LeftTextureHandle, System.IntPtr ReftTextureHandle, int w, int h);
         [DllImport("f-ar")]
-        private static extern void SwitchProjector(int type);
+        private static extern void fmARSwitchProjector(int type);
         [DllImport("f-ar")]
-        private static extern void IsGamaSpace(int cSpace);
+        private static extern void fmARIsGamaSpace(int cSpace);
         [DllImport("f-ar")]
-        private static extern void StopView();
+        private static extern void fmARStopView();
 
         public static FARSingleton GetInstance()
         {
@@ -41,7 +41,7 @@ namespace FSpace
         /// </summary>
         public int StartView(IntPtr hWnd, IntPtr FullNativePTR)
         {
-            errorCode = StartView(hWnd, FullNativePTR, SwapchainWidth, SwapchanHeight);
+            errorCode = fmARStartViewDX11(hWnd, FullNativePTR, SwapchainWidth, SwapchanHeight);
             return errorCode;
         }
 
@@ -57,7 +57,7 @@ namespace FSpace
         /// </summary>
         public int StartView_LR(IntPtr hWnd, IntPtr leftNativePTR, IntPtr rightNativePTR)
         {
-            errorCode = StartView_LR(hWnd, leftNativePTR, rightNativePTR, SwapchainWidth, SwapchanHeight);
+            errorCode = fmARStartView_LRDX11(hWnd, leftNativePTR, rightNativePTR, SwapchainWidth, SwapchanHeight);
             return errorCode;
         }
 
@@ -66,12 +66,12 @@ namespace FSpace
 #if UNITY_EDITOR
             if (UnityEditor.PlayerSettings.colorSpace == UnityEngine.ColorSpace.Linear)
             {
-                IsGamaSpace((int)U3DColorSpace.Linear);
+                fmARIsGamaSpace((int)U3DColorSpace.Linear);
             }
             else
-                IsGamaSpace((int)U3DColorSpace.Gama);
+                fmARIsGamaSpace((int)U3DColorSpace.Gama);
 #else
-            IsGamaSpace((int)cSpace);
+            fmARIsGamaSpace((int)cSpace);
 #endif
         }
 
@@ -85,7 +85,7 @@ namespace FSpace
         /// </summary>
         public void SwitchProjector(ProjectorType type)
         {
-            SwitchProjector((int)type);
+            fmARSwitchProjector((int)type);
         }
 
         /// <summary>
@@ -93,14 +93,14 @@ namespace FSpace
         /// </summary>
         public void CloseDown()
         {
-            StopView();
+            fmARStopView();
         }
 
         public const int SwapchainWidth = 1920;
         public const int SwapchanHeight = 1080;
         private int errorCode = 0;
         private FARSingleton() { }
-        ~FARSingleton() { StopView(); }
+        ~FARSingleton() { fmARStopView(); }
         private static FARSingleton m_fviewInstance;
     }
 }

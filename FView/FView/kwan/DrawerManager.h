@@ -4,9 +4,8 @@
 #include <vector>
 #include <d3d11.h>
 #include <DirectXMath.h>
-using namespace std;
-using namespace DirectX;
 
+namespace dxshow {
 //渲染管理类
 template <typename Resource>
 class DrawerManager
@@ -40,11 +39,11 @@ class DrawerManager
   private:
     struct ProjectBuffer
     {
-        XMMATRIX _view;
-        XMMATRIX _ortho;
+        DirectX::XMMATRIX _view;
+        DirectX::XMMATRIX _ortho;
     };
     ID3D11Device* m_d3dDevice;
-    vector<Resource> m_resourcesStarck;
+    std::vector<Resource> m_resourcesStarck;
 
     ProjectBuffer m_projectMatrix;
     ID3D11Buffer* m_projectBuffer;
@@ -65,6 +64,7 @@ DrawerManager<Resource>::DrawerManager()
 template <typename Resource>
 DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3dDevice)
 {
+    using namespace DirectX;
     m_resourcesStarck.clear();
     m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 20.0f));
     m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0, 0, 1, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
@@ -133,7 +133,7 @@ template <typename Resource>
 void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 {
     if (ctx != NULL) {
-        typename vector<Resource>::iterator iter = m_resourcesStarck.begin();
+        typename std::vector<Resource>::iterator iter = m_resourcesStarck.begin();
         for (iter; iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
         {
             (*iter)->Render(ctx, 6);
@@ -145,6 +145,7 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 template <typename Resource>
 void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
 {
+    using namespace DirectX;
     if (m_resourcesStarck.size() == 0)
         return;
 
@@ -181,10 +182,11 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
     ctx->UpdateSubresource(m_projectBuffer, 0, NULL, &m_projectMatrix, 0, 0);
     ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
 
-    typename vector<Resource>::iterator iter;
+    typename std::vector<Resource>::iterator iter;
     for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
         (*iter)->UpdateMVPMatrix();
     }
     ctx->Release();
 }
+} // namespace dxshow
 #endif

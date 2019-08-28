@@ -1,14 +1,14 @@
 ﻿//简单的自动互斥类
 #include <mutex>
-using namespace std;
-
+namespace dxshow {
 class Rlock
 {
   public:
-    Rlock(mutex* mu);
+    Rlock(std::mutex* mu);
     ~Rlock();
 
   private:
     Rlock(){};
-    mutex* m_Mutex;
+    std::mutex* m_Mutex;
 };
+} // namespace dxshow

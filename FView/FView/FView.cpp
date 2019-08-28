@@ -11,10 +11,10 @@
 using namespace dxlib;
 
 //全局对象
-D3d11Show m_d3d11show;
+dxshow::D3d11Show m_d3d11show;
 dto::FViewRT fviewRT;
 
-_VSAPI_ int StartView(HWND hWnd, void* textureHandle, int w, int h)
+_VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, int w, int h)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
@@ -23,7 +23,7 @@ _VSAPI_ int StartView(HWND hWnd, void* textureHandle, int w, int h)
     return m_d3d11show.StartRenderingView(hWnd, textureHandle, w, h);
 }
 
-_VSAPI_ int StartView_LR(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
+_VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
@@ -31,7 +31,30 @@ _VSAPI_ int StartView_LR(HWND hWnd, void* LeftTextureHandle, void* RightTextureH
     }
     return m_d3d11show.StartRenderingView(hWnd, LeftTextureHandle, RightTextureHandle, w, h);
 }
-_VSAPI_ int SwitchProjector(int type)
+
+_VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+        return -1;
+    }
+    //预留dx12的资源接收函数,后续再实现
+    //需要先将textureHandle转换为dx11资源
+    return -2;
+}
+
+_VSAPI_ int fmARStartView_LRDX12(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+        return -1;
+    }
+    //预留dx12的资源接收函数,后续再实现
+    //需要先将textureHandle转换为dx11资源
+    return -2;
+}
+
+_VSAPI_ int fmARSwitchProjector(int type)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
@@ -43,11 +66,11 @@ _VSAPI_ int SwitchProjector(int type)
     // -----------         ----------
     //如果只传了一张纹理指针，则此函数无效
     type = type % 2;
-    m_d3d11show.SwichProjector((DrawerManagerU3D::ProjectionType)type);
+    m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::ProjectionType)type);
     return 1;
 }
 
-_VSAPI_ void IsGamaSpace(int space)
+_VSAPI_ void fmARIsGamaSpace(int space)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
@@ -55,10 +78,10 @@ _VSAPI_ void IsGamaSpace(int space)
     }
     //切换Gama与Linner色彩空间
     space %= 2;
-    m_d3d11show.SetGamaSpace((D3d11Show::U3DColorSpace)space);
+    m_d3d11show.SetGamaSpace((dxshow::D3d11Show::U3DColorSpace)space);
 }
 
-_VSAPI_ void StopView()
+_VSAPI_ void fmARStopView()
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
