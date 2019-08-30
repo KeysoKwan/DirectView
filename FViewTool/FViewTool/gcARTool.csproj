@@ -61,6 +61,7 @@
     <Compile Include="WinCalc.xaml.cs">
       <DependentUpon>WinCalc.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WindowPos.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

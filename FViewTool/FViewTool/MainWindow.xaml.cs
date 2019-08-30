@@ -24,6 +24,9 @@ namespace FViewTool
     /// </summary>
     public partial class MainWindow : Window
     {
+        [DllImport("user32.dll")]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
         public MainWindow()
         {
             InitializeComponent();
@@ -82,8 +85,10 @@ namespace FViewTool
 
         private void Btn_openwin_Click(object sender, RoutedEventArgs e)
         {
+            gcARTool.WindowPos.fullScreen(FindWindow(null, "gcARTool"),true,(int)this.Width,(int)this.Height);
             win = new WinCalc();
             win.Show();
+            gcARTool.WindowPos.fullScreen(FindWindow(null, "方格窗口"), false, (int)this.Width, (int)this.Height);
         }
 
         private void Btn_ok_Click(object sender, RoutedEventArgs e)
