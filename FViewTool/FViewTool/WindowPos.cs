@@ -129,6 +129,9 @@ namespace gcARTool
 
         [DllImport("user32.dll")]
         public static extern bool GetMonitorInfoA(IntPtr monitorHandle, ref MonitorInfo mInfo);
+        [DllImport("user32.dll")]
+        private static extern long SetDisplayConfig(uint numPathArrayElements, IntPtr pathArray, uint numModeArrayElements,
+                                                    IntPtr modeArray, uint flags);
 
         /// <summary>
         /// Collection of display information
@@ -197,8 +200,14 @@ namespace gcARTool
         private const int SW_SHOWDEFAULT = 10; //{同 SW_SHOWNORMAL}
         private const int SW_MAX = 10; //{同 SW_SHOWNORMAL}
 
+        private const uint SDC_APPLY = 0x00000080;
+        public const uint SDC_TOPOLOGY_CLONE = 0x00000002; //复制模式
+        public const uint SDC_TOPOLOGY_EXTEND = 0x00000004; //扩展模式
+
         public static void UpdateWindowPos(IntPtr hWnd, bool isMain, int width, int height)
         {
+            //先切换到扩展模式
+            SetDisplayConfig(0, IntPtr.Zero, 0, IntPtr.Zero, (SDC_APPLY | SDC_TOPOLOGY_EXTEND));
             DisplayInfoCollection displays = GetDisplays();
             if (displays.Count > 1) {
                 foreach (var d in displays) {
