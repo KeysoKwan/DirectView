@@ -193,6 +193,7 @@ namespace gcARTool
                         break;
                     }
                     else if (d.Availability == "1" && !isMain) {
+                        MoveWindow(hWnd, 0, 0, width, height, true);
                         ShowWindow(hWnd, SW_MAXIMIZE);
                     }
                 }
