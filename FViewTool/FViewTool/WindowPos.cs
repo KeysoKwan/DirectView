@@ -181,23 +181,34 @@ namespace gcARTool
         public const uint SDC_TOPOLOGY_CLONE = 0x00000002; //复制模式
         public const uint SDC_TOPOLOGY_EXTEND = 0x00000004; //扩展模式
 
-        public static void UpdateWindowPos(IntPtr hWnd, bool isMain, int width, int height)
+        public static void UpdateWindowPos(System.Windows.Window mainWindow, System.Windows.Window meshWindow)
         {
             //先切换到扩展模式
             SetDisplayConfig(0, IntPtr.Zero, 0, IntPtr.Zero, (SDC_APPLY | SDC_TOPOLOGY_EXTEND));
             DisplayInfoCollection displays = GetDisplays();
             if (displays.Count > 1) {
-                foreach (var d in displays) {
-                    if (d.Availability == "0" && isMain) {
-                        MoveWindow(hWnd, (d.MonitorArea.right - d.MonitorArea.left / 2) - width / 2, (d.MonitorArea.bottom - d.MonitorArea.top) / 2 - height, width, height, true);
-                        break;
-                    }
-                    else if (d.Availability == "1" && !isMain) {
-                        MoveWindow(hWnd, 0, 0, width, height, true);
-                        ShowWindow(hWnd, SW_MAXIMIZE);
-                    }
+                //移动主窗口到非当前显示器，网格窗口全屏到当前显示器
+                if (mainWindow.Left > displays[1].MonitorArea.left) {
+                    mainWindow.Left = displays[0].MonitorArea.left+ 100;
+                    mainWindow.Top = displays[0].MonitorArea.left + 100;
+               
+                    meshWindow.Left = displays[1].MonitorArea.left ;
+                    meshWindow.Top = displays[1].MonitorArea.top ;
+                    meshWindow.Width = displays[1].MonitorArea.right - displays[1].MonitorArea.left;
+                    meshWindow.Height = displays[1].MonitorArea.bottom - displays[1].MonitorArea.top;
+                    meshWindow.WindowState = System.Windows.WindowState.Maximized;
                 }
-            }
+                else {
+                    mainWindow.Left = displays[1].MonitorArea.left + 100;
+                    mainWindow.Top = displays[1].MonitorArea.top + 100;
+              
+                    meshWindow.Left = displays[0].MonitorArea.left;
+                    meshWindow.Top = displays[0].MonitorArea.top;
+                    meshWindow.Width = displays[0].MonitorArea.right - displays[0].MonitorArea.left;
+                    meshWindow.Height = displays[0].MonitorArea.bottom - displays[0].MonitorArea.top;
+                    meshWindow.WindowState = System.Windows.WindowState.Maximized;
+                }        
+            }           
         }
     }
 }

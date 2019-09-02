@@ -83,10 +83,9 @@ namespace FViewTool
 
         private void Btn_openwin_Click(object sender, RoutedEventArgs e)
         {
-            gcARTool.WindowPos.UpdateWindowPos(FindWindow(null, "增强现实互动软件(F-AR)"), true, (int)this.Width, (int)this.Height);
             win = new WinCalc();
             win.Show();
-            gcARTool.WindowPos.UpdateWindowPos(FindWindow(null, "方格窗口"), false, (int)this.Width, (int)this.Height);
+            gcARTool.WindowPos.UpdateWindowPos(this, win);
         }
 
         private void Btn_ok_Click(object sender, RoutedEventArgs e)
