@@ -42,14 +42,6 @@ namespace gcARTool
         [DllImport("user32.dll")]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        //根据窗口句柄获取pid
-        [DllImport("User32.dll")]
-        public static extern int GetWindowThreadProcessId(IntPtr hwnd, out int ID);
-
-
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongA", SetLastError = true)]
-        public static extern long GetWindowLong(IntPtr hwnd, int nIndex);
-
         public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong)
         {
             if (IntPtr.Size == 4) {
@@ -73,27 +65,12 @@ namespace gcARTool
         [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true)]
         public static extern bool ShowWindow(IntPtr hWnd, uint nCmdShow);
 
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SetFocus(IntPtr hWnd);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        public static extern bool IsWindow(IntPtr hwnd);
-
-        /// <summary>
-        /// 得到屏幕个数，要注意只有在扩展模式屏幕个数才是2，复制模式屏幕个数仍是1.
-        /// </summary>
-        /// <returns></returns>
-        [DllImport("oglwin")]
-        public static extern uint GetMonitorCount();
 
         [DllImport("user32.dll")]
         public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip,
        MonitorEnumDelegate lpfnEnum, IntPtr dwData);
-
 
         public delegate bool MonitorEnumDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
 
