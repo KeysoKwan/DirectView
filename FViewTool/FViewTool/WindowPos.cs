@@ -197,7 +197,7 @@ namespace gcARTool
         private const int SW_SHOWDEFAULT = 10; //{同 SW_SHOWNORMAL}
         private const int SW_MAX = 10; //{同 SW_SHOWNORMAL}
 
-        public static void fullScreen(IntPtr hWnd, bool isMain, int width, int height)
+        public static void UpdateWindowPos(IntPtr hWnd, bool isMain, int width, int height)
         {
             DisplayInfoCollection displays = GetDisplays();
             if (displays.Count > 1) {

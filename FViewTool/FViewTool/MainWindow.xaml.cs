@@ -37,8 +37,7 @@ namespace FViewTool
             //这个函数以管理员模式运行程序也能找到appdata文件夹没什么问题
             _savePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FViewTool", "FView.json");
             System.IO.FileInfo fi = new System.IO.FileInfo(_savePath);
-            if (!System.IO.Directory.Exists(fi.Directory.FullName))
-            {
+            if (!System.IO.Directory.Exists(fi.Directory.FullName)) {
                 System.IO.Directory.CreateDirectory(fi.Directory.FullName);
             }
 
@@ -47,8 +46,7 @@ namespace FViewTool
 
             buff = writableImage.BackBuffer;
             DLog.LogI("savePath=" + _savePath);
-            Task.Run(() =>
-            {
+            Task.Run(() => {
                 //fview_start(_pathParamC920, "HD Pro Webcam C920", 1280, 720, buff);
                 fview_start2(_pathParamC920, 1280, 720, buff);
             });
@@ -85,17 +83,16 @@ namespace FViewTool
 
         private void Btn_openwin_Click(object sender, RoutedEventArgs e)
         {
-            gcARTool.WindowPos.fullScreen(FindWindow(null, "gcARTool"),true,(int)this.Width,(int)this.Height);
+            gcARTool.WindowPos.UpdateWindowPos(FindWindow(null, "增强现实互动软件(F-AR)"), true, (int)this.Width, (int)this.Height);
             win = new WinCalc();
             win.Show();
-            gcARTool.WindowPos.fullScreen(FindWindow(null, "方格窗口"), false, (int)this.Width, (int)this.Height);
+            gcARTool.WindowPos.UpdateWindowPos(FindWindow(null, "方格窗口"), false, (int)this.Width, (int)this.Height);
         }
 
         private void Btn_ok_Click(object sender, RoutedEventArgs e)
         {
             bool isOK = fview_save(_savePath);
-            if (isOK)
-            {
+            if (isOK) {
                 MessageBox.Show("保存成功!");
             }
         }
@@ -103,8 +100,7 @@ namespace FViewTool
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _timer.Dispose();
-            if (win != null)
-            {
+            if (win != null) {
                 win.Close();
             }
             Fun2();
@@ -112,8 +108,7 @@ namespace FViewTool
 
         private void Btn_closewin_Click(object sender, RoutedEventArgs e)
         {
-            if (win != null)
-            {
+            if (win != null) {
                 win.Close();
             }
         }
@@ -121,8 +116,7 @@ namespace FViewTool
 
         private void OnTimer(object state)
         {
-            App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() =>
-            {
+            App.Current.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() => {
                 UpdateWritableImg(writableImage);
             }));
         }
@@ -133,15 +127,13 @@ namespace FViewTool
         /// <param name="writableImg"></param>
         private void UpdateWritableImg(WriteableBitmap writableImg)
         {
-            try
-            {
+            try {
 
                 writableImage.Lock();
                 writableImg.AddDirtyRect(new Int32Rect(0, 0, writableImg.PixelWidth, writableImg.PixelHeight));
                 writableImg.Unlock();
             }
-            catch (Exception)
-            {
+            catch (Exception) {
             }
         }
 

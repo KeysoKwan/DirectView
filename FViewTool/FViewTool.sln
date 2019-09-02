@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gcARTool", "FViewTool\gcARTool.csproj", "{43880C63-F28B-43CA-A403-DA26BB0AE3C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "F-AR", "FViewTool\F-AR.csproj", "{43880C63-F28B-43CA-A403-DA26BB0AE3C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
