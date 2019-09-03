@@ -15,55 +15,8 @@ namespace gcARTool
             public int Bottom; //最下坐标
         }
 
-        //[DllImport("FView")]
-        //public static extern void ShowInExe(System.IntPtr hWnd, System.IntPtr textureHandle, int w, int h);
-
-        //[DllImport("FViewPlus")]
-        //public static extern void StopView();
-
-
-
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void log_callback_delegate([MarshalAs(UnmanagedType.I4)]int n
-
-         );
-
-        //[DllImport("FViewPlus", CallingConvention = CallingConvention.Cdecl)]
-        //public extern static void set_log_callback(
-        //    [MarshalAs(UnmanagedType.FunctionPtr)]
-        //    log_callback_delegate handler
-        //);
-
-
-        //[DllImport("FView")]
-        //public static extern float GetFreshRate();
-
-        //寻找当前目标窗口的进程
-        [DllImport("user32.dll")]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong)
-        {
-            if (IntPtr.Size == 4) {
-                return SetWindowLongPtr32(hWnd, nIndex, dwNewLong);
-            }
-            return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
-        }
-
-        [DllImport("user32.dll", EntryPoint = "SetWindowLong", CharSet = CharSet.Auto)]
-        public static extern IntPtr SetWindowLongPtr32(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", CharSet = CharSet.Auto)]
-        public static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern long SetWindowPos(IntPtr hwnd, long hWndInsertAfter, long x, long y, long cx, long cy, long wFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool MoveWindow(IntPtr hwnd, int x, int y, int cx, int cy, bool repaint);
-
-        [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true)]
-        public static extern bool ShowWindow(IntPtr hWnd, uint nCmdShow);
+        public delegate void log_callback_delegate([MarshalAs(UnmanagedType.I4)]int n);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SetFocus(IntPtr hWnd);
@@ -144,39 +97,6 @@ namespace gcARTool
             return col;
         }
 
-        private const int SWP_NOOWNERZORDER = 0x200;
-        private const int SWP_NOREDRAW = 0x8;
-        private const int SWP_NOZORDER = 0x4;
-        private const int SWP_SHOWWINDOW = 0x0040;
-        private const int WS_EX_MDICHILD = 0x40;
-        private const int SWP_FRAMECHANGED = 0x20;
-        private const int SWP_NOACTIVATE = 0x10;
-        private const int SWP_ASYNCWINDOWPOS = 0x4000;
-        private const int SWP_NOMOVE = 0x2;
-        private const int SWP_NOSIZE = 0x1;
-        private const int GWL_STYLE = -16;
-        private const int WS_VISIBLE = 0x10000000;
-        private const int WM_CLOSE = 0x10;
-        private const int WS_CHILD = 0x40000000;
-        private const int WS_CAPTION = 0x00C00000;
-        private const int WS_SYSMENU = 0x00080000;
-        private const int WS_SIZEBOX = 0x00040000;
-
-        private const int SW_HIDE = 0; //{隐藏, 并且任务栏也没有最小化图标}
-        private const int SW_SHOWNORMAL = 1; //{用最近的大小和位置显示, 激活}
-        private const int SW_NORMAL = 1; //{同 SW_SHOWNORMAL}
-        private const int SW_SHOWMINIMIZED = 2; //{最小化, 激活}
-        private const int SW_SHOWMAXIMIZED = 3; //{最大化, 激活}
-        private const int SW_MAXIMIZE = 3; //{同 SW_SHOWMAXIMIZED}
-        private const int SW_SHOWNOACTIVATE = 4; //{用最近的大小和位置显示, 不激活}
-        private const int SW_SHOW = 5; //{同 SW_SHOWNORMAL}
-        private const int SW_MINIMIZE = 6; //{最小化, 不激活}
-        private const int SW_SHOWMINNOACTIVE = 7; //{同 SW_MINIMIZE}
-        private const int SW_SHOWNA = 8; //{同 SW_SHOWNOACTIVATE}
-        private const int SW_RESTORE = 9; //{同 SW_SHOWNORMAL}
-        private const int SW_SHOWDEFAULT = 10; //{同 SW_SHOWNORMAL}
-        private const int SW_MAX = 10; //{同 SW_SHOWNORMAL}
-
         private const uint SDC_APPLY = 0x00000080;
         public const uint SDC_TOPOLOGY_CLONE = 0x00000002; //复制模式
         public const uint SDC_TOPOLOGY_EXTEND = 0x00000004; //扩展模式
@@ -189,11 +109,11 @@ namespace gcARTool
             if (displays.Count > 1) {
                 //移动主窗口到非当前显示器，网格窗口全屏到当前显示器
                 if (mainWindow.Left > displays[1].MonitorArea.left) {
-                    mainWindow.Left = displays[0].MonitorArea.left+ 100;
+                    mainWindow.Left = displays[0].MonitorArea.left + 100;
                     mainWindow.Top = displays[0].MonitorArea.left + 100;
-               
-                    meshWindow.Left = displays[1].MonitorArea.left ;
-                    meshWindow.Top = displays[1].MonitorArea.top ;
+
+                    meshWindow.Left = displays[1].MonitorArea.left;
+                    meshWindow.Top = displays[1].MonitorArea.top;
                     meshWindow.Width = displays[1].MonitorArea.right - displays[1].MonitorArea.left;
                     meshWindow.Height = displays[1].MonitorArea.bottom - displays[1].MonitorArea.top;
                     meshWindow.WindowState = System.Windows.WindowState.Maximized;
@@ -201,14 +121,14 @@ namespace gcARTool
                 else {
                     mainWindow.Left = displays[1].MonitorArea.left + 100;
                     mainWindow.Top = displays[1].MonitorArea.top + 100;
-              
+
                     meshWindow.Left = displays[0].MonitorArea.left;
                     meshWindow.Top = displays[0].MonitorArea.top;
                     meshWindow.Width = displays[0].MonitorArea.right - displays[0].MonitorArea.left;
                     meshWindow.Height = displays[0].MonitorArea.bottom - displays[0].MonitorArea.top;
                     meshWindow.WindowState = System.Windows.WindowState.Maximized;
-                }        
-            }           
+                }
+            }
         }
     }
 }

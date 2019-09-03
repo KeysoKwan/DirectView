@@ -24,9 +24,6 @@ namespace FViewTool
     /// </summary>
     public partial class MainWindow : Window
     {
-        [DllImport("user32.dll")]
-        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
         public MainWindow()
         {
             InitializeComponent();
