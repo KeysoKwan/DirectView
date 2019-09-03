@@ -30,11 +30,12 @@ D3d11Show::~D3d11Show()
     RealeaseD3d();
 }
 
-void D3d11Show::InitD3D(HWND hWnd, int w, int h)
+void D3d11Show::InitD3D()
 {
     //创建设备和上下文
-    if (m_isInit)
+    if (m_isInit) {
         return;
+    }
 
     D3D_FEATURE_LEVEL myFeatureLevel;
     UINT createDeviceFlags = 0;
@@ -65,9 +66,9 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
         &m4xMsaaQuality);
     //准备交换链属性
     DXGI_SWAP_CHAIN_DESC sd = {0};
-    sd.BufferDesc.Width = w;
-    sd.BufferDesc.Height = h;
-    sd.BufferDesc.RefreshRate.Numerator = 30;
+    sd.BufferDesc.Width = m_w;
+    sd.BufferDesc.Height = m_h;
+    sd.BufferDesc.RefreshRate.Numerator = 60;
     sd.BufferDesc.RefreshRate.Denominator = 1;
     sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -77,7 +78,7 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
     sd.SampleDesc.Quality = m4xMsaaQuality - 1;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.BufferCount = 1;
-    sd.OutputWindow = hWnd;
+    sd.OutputWindow = m_ViewhWnd;
     sd.Windowed = true;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     sd.Flags = 0;
@@ -116,8 +117,8 @@ void D3d11Show::InitD3D(HWND hWnd, int w, int h)
     D3D11_VIEWPORT vp = {0};
     vp.TopLeftX = 0.f;
     vp.TopLeftY = 0.f;
-    vp.Width = static_cast<float>(w);
-    vp.Height = static_cast<float>(h);
+    vp.Width = static_cast<float>(m_w);
+    vp.Height = static_cast<float>(m_h);
     vp.MinDepth = 0.f;
     vp.MaxDepth = 1.f;
 
@@ -193,7 +194,8 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
     isRendering = false;
     //等待渲染线程返回
     WaitForSingleObject(m_hSemaphore, 100);
-
+    CloseHandle(m_hSemaphore);
+    m_hSemaphore = NULL;
     SafeRelease(colorMapSampler_);
     SafeRelease(solidColorVS_);
     SafeRelease(solidColorPS_);
@@ -223,6 +225,16 @@ void D3d11Show::RenderTexture()
     if (FAILED(hr)) {
         //Present Failed
         RealeaseD3d(false);
+        //当出现渲染设备丢失时的异常处理，需要重新创建一遍交换链路
+        //https://docs.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
+        if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
+            if (currentTexturePTR.size() == 1) {
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
+            }
+            else if (currentTexturePTR.size() == 2) {
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0], currentTexturePTR[1]);
+            }
+        }
     }
 }
 
@@ -252,7 +264,7 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
     m_isGamaSpace = space;
 }
 
-int D3d11Show::StartRenderingView(HWND hWnd, void* textureHandle, int w, int h)
+int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
     isRendering = false;
     if (m_hSemaphore != NULL) {
@@ -264,59 +276,28 @@ int D3d11Show::StartRenderingView(HWND hWnd, void* textureHandle, int w, int h)
 
     if (hWnd == NULL)
         return -2;
-    if (textureHandle == nullptr)
-        return -3;
+
     if (hWnd != m_ViewhWnd) {
         if (m_drawer != NULL) m_drawer.reset();
         RealeaseD3d(false);
+        //窗口变更要等待投屏窗口注册完毕，否则纹理初始化失败
+        Sleep(600);
     }
 
     m_ViewhWnd = hWnd;
     m_w = w;
     m_h = h;
-    isRendering = true;
-    std::thread t(&D3d11Show::DoRenderingView, this, 1, textureHandle);
-    t.detach();
-    return 1;
-}
-
-int D3d11Show::StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTexturePTR, int w, int h)
-{
-    isRendering = false;
-    if (m_hSemaphore != NULL) {
-        //等渲染待线程返回
-        if (WaitForSingleObject(m_hSemaphore, 100) == WAIT_OBJECT_0) {
-            ReleaseSemaphore(m_hSemaphore, 1, NULL);
-        }
-    }
-
-    if (hWnd == NULL)
-        return -2;
-    if (leftTexturePTR == nullptr || rightTexturePTR == nullptr)
-        return -3;
-    if (hWnd != m_ViewhWnd) {
-        if (m_drawer != NULL) m_drawer.reset();
-        RealeaseD3d(false);
-    }
-
-    m_ViewhWnd = hWnd;
-    m_w = w;
-    m_h = h;
-    isRendering = true;
-    m_renderingThread = std::thread(&D3d11Show::DoRenderingView, this, 2, leftTexturePTR, rightTexturePTR);
-    m_renderingThread.detach();
-    return 1;
-}
-
-void D3d11Show::DoRenderingView(int count, ...)
-{
-    InitD3D(m_ViewhWnd, m_w, m_h);
+    InitD3D();
     m_drawer->ClearResources();
+    currentTexturePTR.clear();
     va_list arg_ptr;
     void* nArgValue;
     va_start(arg_ptr, count);
     for (int i = 0; i < count; i++) {
         nArgValue = va_arg(arg_ptr, void*);
+        if (nArgValue == nullptr)
+            return -3;
+        currentTexturePTR.push_back(nArgValue);
         if (count == 1)
             SetupTextureHandle(nArgValue, RenderingResources::ResourceViewport::FULL_VIEW);
         else
@@ -329,8 +310,16 @@ void D3d11Show::DoRenderingView(int count, ...)
     else
         m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_2D);
 
+    std::thread t(&D3d11Show::DoRenderingView, this);
+    t.detach();
+    return 1;
+}
+
+void D3d11Show::DoRenderingView()
+{
     m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
     WaitForSingleObject(m_hSemaphore, 100);
+    isRendering = true;
 
     const int constFps = 60;
     while (isRendering) {

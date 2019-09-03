@@ -24,20 +24,21 @@ class D3d11Show
         Linear = 1
     };
     void EndRendering();
-    //原来的调用方法
-    int StartRenderingView(HWND hWnd, void* textureHandle, int w, int h);
-    //为了不改变原有的接口，所以新增了一个方法，输入left right两张纹理指针绘制双屏
-    int StartRenderingView(HWND hWnd, void* leftTexturePTR, void* rightTexturePTR, int w, int h);
+    ///输入
+    ///HWND hWnd 窗口句柄
+    ///int swapchainWidth 交换链路长度
+    ///int swapchainHeight 交换链路宽度
+    ///int count 缺省参数个数
+    int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
     void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
     void SwichProjector(DrawerManagerU3D::ProjectionType type);
-
     void SetGamaSpace(U3DColorSpace space);
 
   private:
     void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
-    void InitD3D(HWND hWnd, int w, int h);
-    void DoRenderingView(int count, ...);
+    void InitD3D();
+    void DoRenderingView();
 
   public:
     bool isRendering;
@@ -54,6 +55,8 @@ class D3d11Show
 
     //新增渲染类智能指针对象
     std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
+    //存下当前纹理指针，用于异常处理
+    std::vector<void*> currentTexturePTR;
 
     U3DColorSpace m_isGamaSpace;
     int m_w;

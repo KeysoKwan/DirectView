@@ -20,7 +20,7 @@ _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, int w, int h)
     if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }
-    return m_d3d11show.StartRenderingView(hWnd, textureHandle, w, h);
+    return m_d3d11show.StartRenderingView(hWnd,  w, h , 1 ,textureHandle);
 }
 
 _VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
@@ -29,7 +29,7 @@ _VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* Right
     if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }
-    return m_d3d11show.StartRenderingView(hWnd, LeftTextureHandle, RightTextureHandle, w, h);
+    return m_d3d11show.StartRenderingView(hWnd, w, h, 2, LeftTextureHandle, RightTextureHandle);
 }
 
 _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
