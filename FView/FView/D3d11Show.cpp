@@ -181,7 +181,7 @@ void D3d11Show::InitD3D()
         MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
         return;
     }
-    m_drawer = std::make_unique<DrawerManagerU3D>(m_sDevice);
+    m_drawer.reset(new DrawerManagerU3D(m_sDevice));
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
@@ -251,7 +251,7 @@ void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Reso
 {
     if (m_sDevice == NULL || textureHandle == 0)
         return;
-    m_drawer->PushResources(std::make_unique<RenderingResources>(m_sDevice, (ID3D11Texture2D*)textureHandle, type));
+    m_drawer->PushResources(RenderingResources(m_sDevice, (ID3D11Texture2D*)textureHandle, type));
 }
 
 void D3d11Show::SwichProjector(DrawerManagerU3D::ProjectionType type)
@@ -278,10 +278,8 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         return -2;
 
     if (hWnd != m_ViewhWnd) {
-        if (m_drawer != NULL) m_drawer.reset();
+        if (m_drawer != nullptr) m_drawer.reset();
         RealeaseD3d(false);
-        //窗口变更要等待投屏窗口注册完毕，否则纹理初始化失败
-        Sleep(600);
     }
 
     m_ViewhWnd = hWnd;

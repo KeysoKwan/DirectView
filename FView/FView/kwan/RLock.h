@@ -9,6 +9,7 @@ class Rlock
 
   private:
     Rlock(){};
+    Rlock(const Rlock& cpy) {};
     std::mutex* m_Mutex;
 };
 } // namespace dxshow

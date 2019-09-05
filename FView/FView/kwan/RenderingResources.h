@@ -16,6 +16,8 @@ class RenderingResources
         RIGHT_HALF = 2
     };
     RenderingResources();
+    //支持右值拷贝
+    RenderingResources(RenderingResources&& copy);
     RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp = ResourceViewport::FULL_VIEW);
     ~RenderingResources();
     void UpdateMVPMatrix();
@@ -23,8 +25,6 @@ class RenderingResources
     ResourceViewport GetResourceVieportType() const;
 
   private:
-    //Uncopyable
-    RenderingResources(RenderingResources& copy) {}
     struct VertexPos
     {
         DirectX::XMFLOAT3 pos;

@@ -97,7 +97,7 @@ int DrawerManager<Resource>::GetManagerSize() const
 template <typename Resource>
 bool DrawerManager<Resource>::PushResources(Resource&& in_res)
 {
-    m_resourcesStarck.push_back(in_res);
+    m_resourcesStarck.push_back(std::move(in_res));
     return true;
 }
 
@@ -136,7 +136,7 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
         typename std::vector<Resource>::iterator iter = m_resourcesStarck.begin();
         for (iter; iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
         {
-            (*iter)->Render(ctx, 6);
+            (*iter).Render(ctx, 6);
         }
         ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
     }
@@ -154,11 +154,11 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
 
     switch (type) {
     case ProjectionType::T_2D:
-        if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
+        if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
         }
-        else if ((*m_resourcesStarck.begin())->GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
+        else if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.5f, 0.0f, -1.0, 1.0f), XMVectorSet(0.5f, 0.0f, 1.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
         }
@@ -184,7 +184,7 @@ void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
 
     typename std::vector<Resource>::iterator iter;
     for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
-        (*iter)->UpdateMVPMatrix();
+        (*iter).UpdateMVPMatrix();
     }
     ctx->Release();
 }

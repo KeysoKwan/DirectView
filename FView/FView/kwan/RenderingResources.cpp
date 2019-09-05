@@ -5,6 +5,22 @@ RenderingResources::RenderingResources()
 {
 }
 
+RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(copy.m_device),
+                                                                    m_vertexBuffer(copy.m_vertexBuffer),
+                                                                    m_d3dtex(copy.m_d3dtex),
+                                                                    m_ResourceView(copy.m_ResourceView),
+                                                                    m_MVPbuffer(copy.m_MVPbuffer),
+                                                                    m_commandBuffer(copy.m_commandBuffer),
+                                                                    _MVPmatrix(copy._MVPmatrix),
+                                                                    m_vp(copy.m_vp)
+{
+    copy.m_device = 0;
+    copy.m_vertexBuffer = 0;
+    copy.m_d3dtex = 0;
+    copy.m_ResourceView = 0;
+    copy.m_MVPbuffer = 0;
+}
+
 RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : m_device(device), m_d3dtex(d3dtex), m_vp(vp)
 {
     using namespace DirectX;
@@ -119,7 +135,7 @@ void RenderingResources::UpdateMVPMatrix()
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(-0.5, 0.0, 0.0));
         break;
     case ResourceViewport::RIGHT_HALF:
-        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 1.0)) /* * XMMatrixScaling(2.0, 1, 1)*/;
+        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 0.0)) /* * XMMatrixScaling(2.0, 1, 1)*/;
         break;
     default:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());

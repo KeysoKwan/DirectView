@@ -9,7 +9,7 @@
 #include <thread>
 
 namespace dxshow {
-using DrawerManagerU3D = DrawerManager<std::shared_ptr<RenderingResources>>;
+using DrawerManagerU3D = DrawerManager<RenderingResources>;
 
 class D3d11Show
 {
