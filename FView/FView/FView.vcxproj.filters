@@ -72,6 +72,9 @@
     <ClInclude Include="kwan\RLock.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="kwan\MonitorAdapter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -102,6 +105,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="kwan\RLock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kwan\MonitorAdapter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -166,6 +166,7 @@
     <ClInclude Include="kwan\IUnityGraphics.h" />
     <ClInclude Include="kwan\IUnityGraphicsD3D11.h" />
     <ClInclude Include="kwan\IUnityInterface.h" />
+    <ClInclude Include="kwan\MonitorAdapter.h" />
     <ClInclude Include="kwan\RenderingResources.h" />
     <ClInclude Include="kwan\RLock.h" />
     <ClInclude Include="MCDevice.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="FView.cpp" />
     <ClCompile Include="hid.c" />
     <ClCompile Include="kwan\DrawerManager.cpp" />
+    <ClCompile Include="kwan\MonitorAdapter.cpp" />
     <ClCompile Include="kwan\RenderingResources.cpp" />
     <ClCompile Include="kwan\RLock.cpp" />
     <ClCompile Include="MCDevice.cpp" />

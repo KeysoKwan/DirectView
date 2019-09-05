@@ -7,6 +7,7 @@
 #include "FView.h"
 #include "MCDevice.h"
 #include "./dto/FViewRT.h"
+#include "kwan/MonitorAdapter.h"
 
 using namespace dxlib;
 
@@ -20,7 +21,7 @@ _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, int w, int h)
     if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }
-    return m_d3d11show.StartRenderingView(hWnd,  w, h , 1 ,textureHandle);
+    return m_d3d11show.StartRenderingView(hWnd, w, h, 1, textureHandle);
 }
 
 _VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
@@ -61,9 +62,9 @@ _VSAPI_ int fmARSwitchProjector(int type)
         return -1;
     }
     //传两张纹理指针的左右3D投屏下，可切换到只显示左画面到投屏窗口或左右一起显示
-    // -----------         ---------
-    // |   L  |   R  |  or   |     L     |
-    // -----------         ----------
+    // -----------       ---------
+    // |  L |  R |  or   |   L   |
+    // -----------       ---------
     //如果只传了一张纹理指针，则此函数无效
     type = type % 2;
     m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::ProjectionType)type);
@@ -89,6 +90,50 @@ _VSAPI_ void fmARStopView()
     }
     //安全退出线程并关闭渲染窗口
     m_d3d11show.EndRendering();
+}
+
+
+// 通过EDID获取屏幕信息
+// 返回屏幕坐标列表
+
+//更新物理显示器列表
+//return int
+//  result >= 0 返回当前屏幕个数
+//  result = -1 获取驱动失败
+//  result = -2 读取EDID失败
+_VSAPI_ int fmARUpdatePhysicalMonitor()
+{
+    return GCmointor::XDD_GetActiveAttachedMonitor(GCmointor::StackGcinfo);
+}
+//返回缓存中所有显示器数量
+//return int
+_VSAPI_ int fmARGetMonitorCount()
+{
+    return GCmointor::StackGcinfo.size();
+}
+//输入index返回GCinfo数据
+//GCinfo* out_struct需要在外部创建内存
+//return int
+//  result =  1 数据获取成功
+//  result = -1 out_struct为空指针
+//  result = -2 index越界
+_VSAPI_ int fmARGetMonitorInfoByIndex(GCmointor::GCinfo* out_struct, int index)
+{
+    if (out_struct == NULL)
+        return -1;
+
+    using namespace GCmointor;
+    if (index >= 0 && index < StackGcinfo.size()) {
+        out_struct->isGCmonitor = StackGcinfo[index].isGCmonitor;
+        out_struct->RCleft = StackGcinfo[index].RCleft;
+        out_struct->RCright = StackGcinfo[index].RCright;
+        out_struct->RCtop = StackGcinfo[index].RCtop;
+        out_struct->RCbottom = StackGcinfo[index].RCbottom;
+        memcpy_s(out_struct->DeviceName, 18, StackGcinfo[index].DeviceName, 18);
+        return 1;
+    }
+    else
+        return -2;
 }
 
 ///-------------------------------------------------------------------------------------------------
