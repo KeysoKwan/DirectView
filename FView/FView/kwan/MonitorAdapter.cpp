@@ -1,6 +1,7 @@
 ﻿#include "windows.h"
 #include "MonitorAdapter.h"
 #include "RLock.h"
+#include <algorithm>
 
 namespace GCmointor {
 
@@ -216,76 +217,40 @@ int XDD_GetActiveAttachedMonitor(std::vector<GCinfo> &out_vec) // 返回GCinfo�
                     //获取驱动失败
                     return -1;
                 }
-
                 BYTE EDIDBuf[256] = {0};
                 DWORD OUTLENGTH = 0;
                 if (XDD_GetDeviceEDID(strModel.c_str(), strDriver.c_str(), EDIDBuf, 256, &OUTLENGTH) == FALSE) {
                     //读取EDID失败
                     return -2;
                 }
-                /*       std::ofstream oFile;
-                    oFile.open("C:\\Users\\Admin\\Desktop\\新建文本文档.txt");
-                    for (int i = 0; i < OUTLENGTH; i++)
-                    {
-                        oFile << (char)EDIDBuf[i];
-                    }
-                    oFile.close();*/
-
-                DWORD index = 71;
-                while (index < OUTLENGTH - 10) {
-                    //EDID描述符区域寻找硬件ID描述头
-                    if (EDIDBuf[index] == '\0' && EDIDBuf[index + 1] == '\0' && EDIDBuf[index + 2] == '\0' && EDIDBuf[index + 3] == 252 && EDIDBuf[index + 4] == '\0') {
-                        if (EDIDBuf[index + 5] != 'H' || EDIDBuf[index + 6] != 'A' || EDIDBuf[index + 7] != 'I' || EDIDBuf[index + 8] != 'E' || EDIDBuf[index + 9] != 'R') {
-                            // EDID不匹配
-                            std::vector<MONITORINFOEX>::iterator ithMoniter = g_hMonitorGroup.begin();
-                            for (ithMoniter; ithMoniter != g_hMonitorGroup.end(); ithMoniter++) {
-                                if (std::wstring(ddMonTmp.DeviceName).find(std::wstring((*ithMoniter).szDevice)) != std::wstring::npos) {
-                                    //非GC显示器，读取Rect数据，入栈
-                                    GCinfo info = {false, (*ithMoniter).rcMonitor.left, (*ithMoniter).rcMonitor.right, (*ithMoniter).rcMonitor.top, (*ithMoniter).rcMonitor.bottom};
-                                    memcpy_s(info.DeviceName, 18, EDIDBuf + sizeof(BYTE) * (index + 5), 18);
-                                    int i = 0;
-                                    while (i < 18) {
-                                        if (info.DeviceName[i] == '\n') {
-                                            info.DeviceName[i] = '\0';
-                                            break;
-                                        }
-                                        i++;
-                                    }
-                                    out_vec.push_back(info);
-                                }
-                            }
+                const DWORD DescriptionBeginIndex = 71;
+                const BYTE DescriptionBuf[] = {'\0', '\0', '\0', 252, '\0'}; //这是一个显示器型号描述头
+                const BYTE GCBuf[] = {'H', 'A', 'I', 'E', 'R'};              //GC型号描述字段
+                auto beginPTR = std::search(std::begin(EDIDBuf) + DescriptionBeginIndex, std::end(EDIDBuf), std::begin(DescriptionBuf), std::end(DescriptionBuf));
+                if (beginPTR != std::end(EDIDBuf)) {
+                    auto resultPTR = std::search(beginPTR, beginPTR + sizeof(BYTE) * 18, GCBuf, GCBuf + sizeof(GCBuf));
+                    for (auto& SystemRectInfo : g_hMonitorGroup) {
+                        if (std::wstring(ddMonTmp.DeviceName).find(std::wstring(SystemRectInfo.szDevice)) != std::wstring::npos) {
+                            //识别到显示器，读取数据，入栈
+                            GCinfo info = {resultPTR != beginPTR + sizeof(BYTE) * 18 ? true : false,
+                                           SystemRectInfo.rcMonitor.left,
+                                           SystemRectInfo.rcMonitor.right,
+                                           SystemRectInfo.rcMonitor.top,
+                                           SystemRectInfo.rcMonitor.bottom};
+                            auto end = std::distance(beginPTR + sizeof(BYTE) * 5,std::find(beginPTR + sizeof(BYTE) * 5, beginPTR + sizeof(BYTE) * 18, (BYTE)'\n'));
+                            memcpy_s(info.DeviceName, end, beginPTR + sizeof(BYTE) * 5, end);
+                            out_vec.push_back(info);
                         }
-                        else //EDID匹配
-                        {
-                            std::vector<MONITORINFOEX>::iterator ithMoniter = g_hMonitorGroup.begin();
-                            for (ithMoniter; ithMoniter != g_hMonitorGroup.end(); ithMoniter++) {
-                                if (std::wstring(ddMonTmp.DeviceName).find(std::wstring((*ithMoniter).szDevice)) != std::wstring::npos) {
-                                    //是GC显示器，读取Rect数据，入栈
-                                    GCinfo info = {true, (*ithMoniter).rcMonitor.left, (*ithMoniter).rcMonitor.right, (*ithMoniter).rcMonitor.top, (*ithMoniter).rcMonitor.bottom};
-                                    memcpy_s(info.DeviceName, 18, EDIDBuf + sizeof(BYTE) * (index + 5), 18);
-                                    int i = 0;
-                                    while (i < 18) {
-                                        if (info.DeviceName[i] == '\n') {
-                                            info.DeviceName[i] = '\0';
-                                            break;
-                                        }
-                                        i++;
-                                    }
-                                    out_vec.push_back(info);
-                                }
-                            }
-                        }
-                        break;
                     }
-                    index++;
                 }
+                else
+                    return -3; //EDID中没有找到型号描述块
             }
             // 下一个Monitor
             dwMonitorIndex += 1;
             ZeroMemory(&ddMonTmp, sizeof(ddMonTmp));
             ddMonTmp.cb = sizeof(ddMonTmp);
         }
-
         // 下一个Adapter
         dwAdapterIndex += 1;
         ZeroMemory(&ddAdapter, sizeof(ddAdapter));

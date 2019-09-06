@@ -15,7 +15,9 @@ struct GCinfo
     char DeviceName[18];
 };
 static std::vector<GCinfo> StackGcinfo;
-// 获取当前正在使用的Monitor
+
+//将当前所有Monitor坐标push到out_vec内
+//并将EDID中包含HAIER的显示器标记为isGCmonitor = true
 int XDD_GetActiveAttachedMonitor(std::vector<GCinfo> &out_vec);
 } // namespace GCmointor
 #endif
