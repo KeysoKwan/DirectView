@@ -118,4 +118,7 @@
     <Resource Include="f3dteaching.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>xcopy "$(SolutionDir)..\FView\x64\Release\f-ar.dll" "$(TargetDir)" /Y /I</PreBuildEvent>
+  </PropertyGroup>
 </Project>
