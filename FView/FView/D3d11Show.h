@@ -38,7 +38,6 @@ class D3d11Show
     void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
     void InitD3D();
-    void DoRenderingView();
 
   public:
     bool isRendering;

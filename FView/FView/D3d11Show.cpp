@@ -1,7 +1,4 @@
-﻿#include "stdafx.h"
-#include "D3d11Show.h"
-#include <Windows.h>
-#include <stdio.h>
+﻿#include "D3d11Show.h"
 #include "kwan/Tex2DPixelShader.inc"
 #include "kwan/Tex2DVertexShader.inc"
 #include "kwan/Tex2DPixelShaderLinearSpace.inc"
@@ -308,32 +305,31 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     else
         m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_2D);
 
-    std::thread t(&D3d11Show::DoRenderingView, this);
-    t.detach();
+  /*  std::thread t(&D3d11Show::DoRenderingView, this);
+    t.detach();*/
+    auto lambdaRenderThread = [this] () {
+        m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
+        WaitForSingleObject(m_hSemaphore, 100);
+        isRendering = true;
+
+        const int constFps = 60;
+        while (isRendering) {
+            std::this_thread::yield();
+            if (!IsWindow(m_ViewhWnd)) {
+                EndRendering();
+            }
+            float timeInOneFps = 1000.0f / constFps;
+            DWORD timeBegin = GetTickCount();
+            if (!IsIconic(m_ViewhWnd)) {
+                RenderTexture();
+            }
+            DWORD timeTotal = GetTickCount() - timeBegin;
+            if (timeTotal < timeInOneFps)
+                Sleep(DWORD(timeInOneFps - timeTotal));
+        }
+        ReleaseSemaphore(m_hSemaphore, 1, NULL);
+    };
+    std::thread(lambdaRenderThread).detach();
     return 1;
-}
-
-void D3d11Show::DoRenderingView()
-{
-    m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
-    WaitForSingleObject(m_hSemaphore, 100);
-    isRendering = true;
-
-    const int constFps = 60;
-    while (isRendering) {
-        std::this_thread::yield();
-        if (!IsWindow(m_ViewhWnd)) {
-            EndRendering();
-        }
-        float timeInOneFps = 1000.0f / constFps;
-        DWORD timeBegin = GetTickCount();
-        if (!IsIconic(m_ViewhWnd)) {
-            RenderTexture();
-        }
-        DWORD timeTotal = GetTickCount() - timeBegin;
-        if (timeTotal < timeInOneFps)
-            Sleep(DWORD(timeInOneFps - timeTotal));
-    }
-    ReleaseSemaphore(m_hSemaphore, 1, NULL);
 }
 } // namespace dxshow
