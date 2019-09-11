@@ -15,23 +15,26 @@ using namespace dxlib;
 dxshow::D3d11Show m_d3d11show;
 dto::FViewRT fviewRT;
 
-_VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, int w, int h)
+_VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTextureHandle, int w, int h)
 {
     //如果不在我们自己的机器上,那么就直接返回
     if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }
-    return m_d3d11show.StartRenderingView(hWnd, w, h, 1, textureHandle);
+    if (RightTextureHandle == NULL || RightTextureHandle == nullptr)
+        return m_d3d11show.StartRenderingView(hWnd, w, h, 1, textureHandle);
+    else
+        return m_d3d11show.StartRenderingView(hWnd, w, h, 2, textureHandle, RightTextureHandle);
 }
 
-_VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
-{
-    //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
-        return -1;
-    }
-    return m_d3d11show.StartRenderingView(hWnd, w, h, 2, LeftTextureHandle, RightTextureHandle);
-}
+//_VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
+//{
+//    //如果不在我们自己的机器上,那么就直接返回
+//    if (MCDevice::GetInst()->ReadID() == 0) {
+//        return -1;
+//    }
+//    return m_d3d11show.StartRenderingView(hWnd, w, h, 2, LeftTextureHandle, RightTextureHandle);
+//}
 
 _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
 {
@@ -44,16 +47,16 @@ _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
     return -2;
 }
 
-_VSAPI_ int fmARStartView_LRDX12(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
-{
-    //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
-        return -1;
-    }
-    //预留dx12的资源接收函数,后续再实现
-    //需要先将textureHandle转换为dx11资源
-    return -2;
-}
+//_VSAPI_ int fmARStartView_LRDX12(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
+//{
+//    //如果不在我们自己的机器上,那么就直接返回
+//    if (MCDevice::GetInst()->ReadID() == 0) {
+//        return -1;
+//    }
+//    //预留dx12的资源接收函数,后续再实现
+//    //需要先将textureHandle转换为dx11资源
+//    return -2;
+//}
 
 _VSAPI_ int fmARSwitchProjector(int type)
 {
@@ -69,6 +72,15 @@ _VSAPI_ int fmARSwitchProjector(int type)
     type = type % 2;
     m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::ProjectionType)type);
     return 1;
+}
+_VSAPI_ void fmARsetfullscreen(bool fullscreen)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    if (MCDevice::GetInst()->ReadID() == 0) {
+        return;
+    }
+    //切换是否全屏
+    m_d3d11show.FullscreenState(fullscreen);
 }
 
 _VSAPI_ void fmARIsGamaSpace(int space)
@@ -91,7 +103,6 @@ _VSAPI_ void fmARStopView()
     //安全退出线程并关闭渲染窗口
     m_d3d11show.EndRendering();
 }
-
 
 // 通过EDID获取屏幕信息
 // 返回屏幕坐标列表
