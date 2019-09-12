@@ -6,6 +6,7 @@
 #include <memory>
 #include "kwan/DrawerManager.h"
 #include "kwan/RenderingResources.h"
+#include "kwan/RLock.h"
 #include <thread>
 
 namespace dxshow {
@@ -30,14 +31,14 @@ class D3d11Show
     ///int swapchainHeight 交换链路宽度
     ///int count 缺省参数个数
     int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
-    void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
-    void SwichProjector(DrawerManagerU3D::ProjectionType type);
+    void SwichProjector(DrawerManagerU3D::OrthoMatrixType type);
     void SetGamaSpace(U3DColorSpace space);
 
   private:
     void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
     void InitD3D();
+    void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
 
   public:
     bool isRendering;
@@ -63,10 +64,12 @@ class D3d11Show
     HWND m_ViewhWnd;
 
     bool m_isInit;
+    bool m_MatrixModifyFlag;
     //线程与线程安全对象
     std::thread m_renderingThread;
     HANDLE m_hSemaphore = NULL;
     const char* m_SemaphoreName = "D3D11SHOW_sem";
+    DrawerManagerU3D::OrthoMatrixType m_OrthoMatrixType;
     //安全释放资源
     template <typename Res>
     inline void SafeRelease(Res* ptr)

@@ -70,17 +70,8 @@ _VSAPI_ int fmARSwitchProjector(int type)
     // -----------       ---------
     //如果只传了一张纹理指针，则此函数无效
     type = type % 2;
-    m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::ProjectionType)type);
+    m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::OrthoMatrixType)type);
     return 1;
-}
-_VSAPI_ void fmARsetfullscreen(bool fullscreen)
-{
-    //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
-        return;
-    }
-    //切换是否全屏
-    m_d3d11show.FullscreenState(fullscreen);
 }
 
 _VSAPI_ void fmARIsGamaSpace(int space)

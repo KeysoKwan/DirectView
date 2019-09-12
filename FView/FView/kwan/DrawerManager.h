@@ -11,7 +11,7 @@ template <typename Resource>
 class DrawerManager
 {
   public:
-    enum class ProjectionType
+    enum class OrthoMatrixType
     {
         T_2D = 0,
         T_3Dleftright = 1
@@ -34,7 +34,7 @@ class DrawerManager
     //渲染到元素
     void RenderAllResource(ID3D11DeviceContext* ctx);
     //更新排列渲染矩阵
-    void UpdateAllMatrix(ProjectionType type);
+    void UpdateAllMatrix(OrthoMatrixType type);
 
   private:
     struct ProjectBuffer
@@ -47,6 +47,8 @@ class DrawerManager
 
     ProjectBuffer m_projectMatrix;
     ID3D11Buffer* m_projectBuffer;
+
+    OrthoMatrixType m_orthoMatrixType;
 
     template <typename Res>
     inline void SafeRelease(Res* ptr)
@@ -62,7 +64,7 @@ DrawerManager<Resource>::DrawerManager()
 }
 
 template <typename Resource>
-DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3dDevice)
+DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3dDevice), m_orthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D)
 {
     using namespace DirectX;
     m_resourcesStarck.clear();
@@ -143,38 +145,47 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 }
 
 template <typename Resource>
-void DrawerManager<Resource>::UpdateAllMatrix(ProjectionType type)
+void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
 {
     using namespace DirectX;
+    /* if (type == m_orthoMatrixType)
+        return;*/
     if (m_resourcesStarck.size() == 0)
         return;
 
+    m_orthoMatrixType = type;
     ID3D11DeviceContext* ctx = NULL;
     m_d3dDevice->GetImmediateContext(&ctx);
-
-    switch (type) {
-    case ProjectionType::T_2D:
-        if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
-            m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
-        }
-        else if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
-            m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.5f, 0.0f, -1.0, 1.0f), XMVectorSet(0.5f, 0.0f, 1.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
-        }
-        else {
+    if (m_resourcesStarck.size() == 1) {
+        //   MessageBox(NULL, L"m_resourcesStarck.size() == 1", L"error", MB_OK);
+        m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+        m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+    }
+    else {
+        switch (type) {
+        case OrthoMatrixType::T_2D:
+            if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
+                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
+            }
+            else if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
+                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.5f, 0.0f, -1.0, 1.0f), XMVectorSet(0.5f, 0.0f, 1.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
+            }
+            else {
+                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+            }
+            break;
+        case OrthoMatrixType::T_3Dleftright:
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+            break;
+        default:
+            m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
+            break;
         }
-        break;
-    case ProjectionType::T_3Dleftright:
-        m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-        m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
-        break;
-    default:
-        m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-        m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
-        break;
     }
 
     //m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0, 0, 0, 1.0f), XMVectorSet(0, 0, 1, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));

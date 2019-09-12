@@ -18,7 +18,9 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_isGamaSpace(U3DColorSpace::Gama),
                          m_w(0),
                          m_h(0),
-                         m_isInit(false)
+                         m_isInit(false),
+                         m_OrthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D),
+                         m_MatrixModifyFlag(false)
 {
 }
 
@@ -251,9 +253,10 @@ void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Reso
     m_drawer->PushResources(RenderingResources(m_sDevice, (ID3D11Texture2D*)textureHandle, type));
 }
 
-void D3d11Show::SwichProjector(DrawerManagerU3D::ProjectionType type)
+void D3d11Show::SwichProjector(DrawerManagerU3D::OrthoMatrixType type)
 {
-    m_drawer->UpdateAllMatrix(type);
+    m_OrthoMatrixType = type;
+    m_MatrixModifyFlag = true;
 }
 
 void D3d11Show::SetGamaSpace(U3DColorSpace space)
@@ -299,15 +302,8 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             SetupTextureHandle(nArgValue, (RenderingResources::ResourceViewport)(i + 1));
     }
     va_end(arg_ptr);
-    if (count == 2) {
-        m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_3Dleftright);
-    }
-    else
-        m_drawer->UpdateAllMatrix(DrawerManagerU3D::ProjectionType::T_2D);
-
-  /*  std::thread t(&D3d11Show::DoRenderingView, this);
-    t.detach();*/
-    auto lambdaRenderThread = [this] () {
+    m_MatrixModifyFlag = true;
+    auto lambdaRenderThread = [this, count]() {
         m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
         WaitForSingleObject(m_hSemaphore, 100);
         isRendering = true;
@@ -321,6 +317,10 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             float timeInOneFps = 1000.0f / constFps;
             DWORD timeBegin = GetTickCount();
             if (!IsIconic(m_ViewhWnd)) {
+                if (m_MatrixModifyFlag) {
+                    m_drawer->UpdateAllMatrix(m_OrthoMatrixType);
+                    m_MatrixModifyFlag = false;
+                }
                 RenderTexture();
             }
             DWORD timeTotal = GetTickCount() - timeBegin;
