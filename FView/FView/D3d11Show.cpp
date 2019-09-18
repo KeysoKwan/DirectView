@@ -2,6 +2,8 @@
 #include "kwan/Tex2DPixelShader.inc"
 #include "kwan/Tex2DVertexShader.inc"
 #include "kwan/Tex2DPixelShaderLinearSpace.inc"
+#include "kwan/IVR_Log.h"
+#include "kwan/FindWindowPtr.h"
 #pragma comment(lib, "d3d11.lib")
 
 namespace dxshow {
@@ -22,6 +24,26 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_OrthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D),
                          m_MatrixModifyFlag(false)
 {
+    std::vector<HWND> temp_vecHWnds;
+    temp_vecHWnds.clear();
+    GetHWndsByProcessID(GetCurrentProcessId(), temp_vecHWnds);
+
+    HWND U3dWin = NULL;
+    for (const HWND& h : temp_vecHWnds) {
+        HWND parent = GetParent(h);
+        if (parent == NULL) {
+            m_u3dhWnd = h;         
+        }
+        TCHAR name[256];
+        GetWindowText(h, name, 256);
+        std::wstring temp_windowName = std::wstring(name);
+        if (temp_windowName.find(L"Unity") != std::wstring::npos)
+        {
+            U3dWin = h;
+        }
+    }
+    if (U3dWin != NULL) //如果U3D的编辑器窗口不是NULL,重新赋值
+        m_u3dhWnd = U3dWin;
 }
 
 D3d11Show::~D3d11Show()
@@ -29,11 +51,11 @@ D3d11Show::~D3d11Show()
     RealeaseD3d();
 }
 
-void D3d11Show::InitD3D()
+int D3d11Show::InitD3D()
 {
     //创建设备和上下文
     if (m_isInit) {
-        return;
+        return 0;
     }
 
     D3D_FEATURE_LEVEL myFeatureLevel;
@@ -54,8 +76,10 @@ void D3d11Show::InitD3D()
         &m_deviceContext);
 
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Device failed!", L"error", MB_OK);
-        return;
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -1;
     }
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
@@ -91,8 +115,11 @@ void D3d11Show::InitD3D()
     dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)(&dxgiFactory));
     hr = dxgiFactory->CreateSwapChain(m_sDevice, &sd, &m_swapChain);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
-        return;
+        //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -2;
     }
     dxgiFactory->Release();
     dxgiAdapter->Release();
@@ -103,8 +130,11 @@ void D3d11Show::InitD3D()
     m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
     hr = m_sDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
-        return;
+        // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D():CreateRenderTargetView(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -3;
     }
     if (backBuffer)
         backBuffer->Release();
@@ -126,21 +156,29 @@ void D3d11Show::InitD3D()
     // shaders
     hr = m_sDevice->CreateVertexShader(g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), nullptr, &solidColorVS_);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"创建顶点着色器失败!", L"error", MB_OK);
-        return;
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -4;
     }
     if (m_isGamaSpace == U3DColorSpace::Gama) {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
-            MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
-            return;
+            //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
+            char charBuf[512];
+            sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
+            IvrLog::Inst()->Log(std::string(charBuf));
+            return -5;
         }
     }
     else {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShaderLinearSpace, sizeof(g_Tex2DPixelShaderLinearSpace), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
-            MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
-            return;
+            //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
+            char charBuf[512];
+            sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
+            IvrLog::Inst()->Log(std::string(charBuf));
+            return -6;
         }
     }
 
@@ -153,14 +191,12 @@ void D3d11Show::InitD3D()
             };
         hr = m_sDevice->CreateInputLayout(s_DX11InputElementDesc, 2, g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), &inputLayout_);
         if (FAILED(hr)) {
-            MessageBox(NULL, L"创建输入布局失败!", L"error", MB_OK);
-            return;
+            //MessageBox(NULL, L"创建输入布局失败!", L"error", MB_OK);
+            char charBuf[512];
+            sprintf_s(charBuf, 512, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
+            IvrLog::Inst()->Log(std::string(charBuf));
+            return -7;
         }
-    }
-
-    if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
-        return;
     }
 
     m_isInit = true;
@@ -177,8 +213,11 @@ void D3d11Show::InitD3D()
     hr = m_sDevice->CreateSamplerState(&colorMapDesc, &colorMapSampler_);
 
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
-        return;
+        //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -9;
     }
     m_drawer.reset(new DrawerManagerU3D(m_sDevice));
 
@@ -186,6 +225,11 @@ void D3d11Show::InitD3D()
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
     m_deviceContext->PSSetShader(solidColorPS_, 0, 0);       //设置像素着色器
     m_deviceContext->PSSetSamplers(0, 1, &colorMapSampler_); //设置纹理采样器
+   
+    if (m_u3dhWnd != NULL) {
+        SetForegroundWindow(m_u3dhWnd);      
+    }
+    return 1;
 }
 
 void D3d11Show::RealeaseD3d(bool isClearhWnd)
@@ -227,11 +271,21 @@ void D3d11Show::RenderTexture()
         //当出现渲染设备丢失时的异常处理，需要重新创建一遍交换链路
         //https://docs.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
+
+            if (hr == DXGI_ERROR_DEVICE_REMOVED) {
+                char buff[64] = {};
+                sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", (hr == DXGI_ERROR_DEVICE_REMOVED) ? m_sDevice->GetDeviceRemovedReason() : hr);
+                IvrLog::Inst()->Log(buff);
+            }
+
+            if (hr == DXGI_ERROR_DEVICE_RESET)
+                IvrLog::Inst()->Log(L"m_swapChain->Present(1, 0) failed with error DXGI_ERROR_DEVICE_RESET");
+
             if (currentTexturePTR.size() == 1) {
                 StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
             }
             else if (currentTexturePTR.size() == 2) {
-                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0], currentTexturePTR[1]);
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 2, currentTexturePTR[0], currentTexturePTR[1]);
             }
         }
     }
@@ -285,7 +339,9 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     m_ViewhWnd = hWnd;
     m_w = w;
     m_h = h;
-    InitD3D();
+    if (InitD3D() < 0) {
+        return -3;
+    }
     m_drawer->ClearResources();
     currentTexturePTR.clear();
     va_list arg_ptr;
@@ -294,7 +350,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     for (int i = 0; i < count; i++) {
         nArgValue = va_arg(arg_ptr, void*);
         if (nArgValue == nullptr)
-            return -3;
+            return -4;
         currentTexturePTR.push_back(nArgValue);
         if (count == 1)
             SetupTextureHandle(nArgValue, RenderingResources::ResourceViewport::FULL_VIEW);

@@ -1,5 +1,5 @@
 ﻿#include "RenderingResources.h"
-
+#include "IVR_Log.h"
 namespace dxshow {
 RenderingResources::RenderingResources()
 {
@@ -83,7 +83,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     resourceData.pSysMem = vertices;
     HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+      //  MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
         return;
     }
 
@@ -95,7 +98,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
 
     hr = m_device->CreateShaderResourceView(m_d3dtex, &vdesc, &m_ResourceView);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
+   //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "RenderingResources:CreateShaderResourceView(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
     }
 
     m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
@@ -108,7 +114,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     hr = m_device->CreateBuffer(&commandDesc, NULL, &m_MVPbuffer);
 
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+    //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_MVPbuffer) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
         return;
     }
 }
@@ -132,10 +141,10 @@ void RenderingResources::UpdateMVPMatrix()
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
         break;
     case ResourceViewport::LEFT_HALF:
-        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(-0.5, 0.0, 0.0));
+        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(-0.5, 0.0, 1.0));
         break;
     case ResourceViewport::RIGHT_HALF:
-        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 0.0)) /* * XMMatrixScaling(2.0, 1, 1)*/;
+        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 0.5)) /* * XMMatrixScaling(2.0, 1, 1)*/;
         break;
     default:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());

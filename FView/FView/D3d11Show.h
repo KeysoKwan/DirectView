@@ -37,7 +37,7 @@ class D3d11Show
   private:
     void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
-    void InitD3D();
+    int InitD3D();
     void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
 
   public:
@@ -62,6 +62,7 @@ class D3d11Show
     int m_w;
     int m_h;
     HWND m_ViewhWnd;
+    HWND m_u3dhWnd;
 
     bool m_isInit;
     bool m_MatrixModifyFlag;

@@ -4,6 +4,7 @@
 #include <vector>
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include "IVR_Log.h"
 
 namespace dxshow {
 //渲染管理类
@@ -78,7 +79,10 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3
     commandDesc.CPUAccessFlags = 0;
     HRESULT hr = m_d3dDevice->CreateBuffer(&commandDesc, NULL, &m_projectBuffer);
     if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+        /*MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);*/
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf));
         return;
     }
 }

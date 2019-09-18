@@ -75,6 +75,12 @@
     <ClInclude Include="kwan\MonitorAdapter.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="kwan\IVR_Log.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="kwan\FindWindowPtr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -108,6 +114,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="kwan\MonitorAdapter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kwan\IVR_Log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kwan\FindWindowPtr.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

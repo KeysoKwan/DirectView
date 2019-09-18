@@ -161,11 +161,13 @@
     <ClInclude Include="dto\FViewRT.h" />
     <ClInclude Include="dto\JsonHelper.h" />
     <ClInclude Include="dto\Serialize.h" />
+    <ClInclude Include="kwan\FindWindowPtr.h" />
     <ClInclude Include="hidapi.h" />
     <ClInclude Include="kwan\DrawerManager.h" />
     <ClInclude Include="kwan\IUnityGraphics.h" />
     <ClInclude Include="kwan\IUnityGraphicsD3D11.h" />
     <ClInclude Include="kwan\IUnityInterface.h" />
+    <ClInclude Include="kwan\IVR_Log.h" />
     <ClInclude Include="kwan\MonitorAdapter.h" />
     <ClInclude Include="kwan\RenderingResources.h" />
     <ClInclude Include="kwan\RLock.h" />
@@ -179,9 +181,11 @@
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="D3d11Show.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="kwan\FindWindowPtr.cpp" />
     <ClCompile Include="FView.cpp" />
     <ClCompile Include="hid.c" />
     <ClCompile Include="kwan\DrawerManager.cpp" />
+    <ClCompile Include="kwan\IVR_Log.cpp" />
     <ClCompile Include="kwan\MonitorAdapter.cpp" />
     <ClCompile Include="kwan\RenderingResources.cpp" />
     <ClCompile Include="kwan\RLock.cpp" />
