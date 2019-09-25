@@ -75,8 +75,12 @@ class D3d11Show
     template <typename Res>
     inline void SafeRelease(Res* ptr)
     {
-        if (ptr != 0) ptr->Release();
-        ptr = 0;
+        if (ptr != nullptr){
+            if(ptr != 0)
+                ptr->Release();
+            ptr = 0;
+        }
+       
     }
 };
 } // namespace dxshow

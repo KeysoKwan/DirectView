@@ -15,12 +15,22 @@ using namespace dxlib;
 dxshow::D3d11Show m_d3d11show;
 dto::FViewRT fviewRT;
 
+/// <returns>
+///  返回错误代码
+/// errorCode >0 成功
+/// errorCode ==-1 如果不在我们自己的机器上
+/// errorCode ==-2 窗口句柄丢失
+/// errorCode ==-3 纹理句柄丢失
+/// errorCode ==-4 渲染设备初始化失败
+/// errorCode ==-5 渲染等待进程超时
+/// errorCode ==-6 windows版本低于win10
+/// </returns>
 _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTextureHandle, int w, int h)
 {
-    //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
-        return -1;
-    }
+    ////如果不在我们自己的机器上,那么就直接返回
+    //if (MCDevice::GetInst()->ReadID() == 0) {
+    //    return -1;
+    //}
     if (RightTextureHandle == NULL || RightTextureHandle == nullptr)
         return m_d3d11show.StartRenderingView(hWnd, w, h, 1, textureHandle);
     else
@@ -61,9 +71,9 @@ _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
 _VSAPI_ int fmARSwitchProjector(int type)
 {
     //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
+   /* if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
-    }
+    }*/
     //传两张纹理指针的左右3D投屏下，可切换到只显示左画面到投屏窗口或左右一起显示
     // -----------       ---------
     // |  L |  R |  or   |   L   |
@@ -77,9 +87,9 @@ _VSAPI_ int fmARSwitchProjector(int type)
 _VSAPI_ void fmARIsGamaSpace(int space)
 {
     //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
+   /* if (MCDevice::GetInst()->ReadID() == 0) {
         return;
-    }
+    }*/
     //切换Gama与Linner色彩空间
     space %= 2;
     m_d3d11show.SetGamaSpace((dxshow::D3d11Show::U3DColorSpace)space);
@@ -88,9 +98,9 @@ _VSAPI_ void fmARIsGamaSpace(int space)
 _VSAPI_ void fmARStopView()
 {
     //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
+  /*  if (MCDevice::GetInst()->ReadID() == 0) {
         return;
-    }
+    }*/
     //安全退出线程并关闭渲染窗口
     m_d3d11show.EndRendering();
 }

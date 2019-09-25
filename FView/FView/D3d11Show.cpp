@@ -1,4 +1,5 @@
 ﻿#include "D3d11Show.h"
+#include <VersionHelpers.h>
 #include "kwan/Tex2DPixelShader.inc"
 #include "kwan/Tex2DVertexShader.inc"
 #include "kwan/Tex2DPixelShaderLinearSpace.inc"
@@ -32,13 +33,12 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
     for (const HWND& h : temp_vecHWnds) {
         HWND parent = GetParent(h);
         if (parent == NULL) {
-            m_u3dhWnd = h;         
+            m_u3dhWnd = h;
         }
         TCHAR name[256];
         GetWindowText(h, name, 256);
         std::wstring temp_windowName = std::wstring(name);
-        if (temp_windowName.find(L"Unity") != std::wstring::npos)
-        {
+        if (temp_windowName.find(L"Unity") != std::wstring::npos) {
             U3dWin = h;
         }
     }
@@ -49,6 +49,8 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
 D3d11Show::~D3d11Show()
 {
     RealeaseD3d();
+    CloseHandle(m_hSemaphore);
+    m_hSemaphore = NULL;
 }
 
 int D3d11Show::InitD3D()
@@ -225,9 +227,9 @@ int D3d11Show::InitD3D()
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
     m_deviceContext->PSSetShader(solidColorPS_, 0, 0);       //设置像素着色器
     m_deviceContext->PSSetSamplers(0, 1, &colorMapSampler_); //设置纹理采样器
-   
+
     if (m_u3dhWnd != NULL) {
-        SetForegroundWindow(m_u3dhWnd);      
+        SetForegroundWindow(m_u3dhWnd);
     }
     return 1;
 }
@@ -236,9 +238,8 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
 {
     isRendering = false;
     //等待渲染线程返回
-    WaitForSingleObject(m_hSemaphore, 100);
-    CloseHandle(m_hSemaphore);
-    m_hSemaphore = NULL;
+    WaitForSingleObject(m_hSemaphore, 300);
+    ReleaseSemaphore(m_hSemaphore, 1, NULL);
     SafeRelease(colorMapSampler_);
     SafeRelease(solidColorVS_);
     SafeRelease(solidColorPS_);
@@ -264,14 +265,17 @@ void D3d11Show::RenderTexture()
     float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};                        //背景颜色
     m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor); //清空视口
     m_drawer->RenderAllResource(m_deviceContext);                           //渲染所有物体
-    HRESULT hr = m_swapChain->Present(1, 0);                                //垂直同步输出
+    HRESULT hr = m_swapChain->Present(1, 0);
     if (FAILED(hr)) {
-        //Present Failed
-        RealeaseD3d(false);
+        //Present Failed , end rendering thread
+        isRendering = false;
+        char buff[64] = {};
+        sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
+        IvrLog::Inst()->Log(buff);
         //当出现渲染设备丢失时的异常处理，需要重新创建一遍交换链路
         //https://docs.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
         if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
-
+            RealeaseD3d(false);
             if (hr == DXGI_ERROR_DEVICE_REMOVED) {
                 char buff[64] = {};
                 sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", (hr == DXGI_ERROR_DEVICE_REMOVED) ? m_sDevice->GetDeviceRemovedReason() : hr);
@@ -294,10 +298,11 @@ void D3d11Show::RenderTexture()
 void D3d11Show::EndRendering()
 {
     isRendering = false;
-    WaitForSingleObject(m_hSemaphore, 200);
+    WaitForSingleObject(m_hSemaphore, 300);
     if (m_ViewhWnd != NULL) {
         ::PostMessage(m_ViewhWnd, WM_QUIT, 0, 0);
     }
+    ReleaseSemaphore(m_hSemaphore, 1, NULL);
 }
 
 void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type)
@@ -320,14 +325,37 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
 
 int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
+    if (!IsWindows10OrGreater())
+    {
+        IvrLog::Inst()->Log("You need at least Windows 10");
+        if (hWnd != NULL) {
+            ::PostMessage(hWnd, WM_QUIT, 0, 0);
+        }
+        return -6;
+    }
+
     isRendering = false;
     if (m_hSemaphore != NULL) {
         //等渲染待线程返回
-        if (WaitForSingleObject(m_hSemaphore, 100) == WAIT_OBJECT_0) {
-            ReleaseSemaphore(m_hSemaphore, 1, NULL);
+        DWORD dw = WaitForSingleObject(m_hSemaphore, 500);
+        switch (dw) {
+        case WAIT_OBJECT_0:
+            break;
+        case WAIT_TIMEOUT:
+            IvrLog::Inst()->Log("StartRenderingView thread timeout!");
+            return -5;
+            break;
+        case WAIT_FAILED:
+            IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!");
+            return -5;
+            break;
         }
     }
-
+    else {
+        m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
+        WaitForSingleObject(m_hSemaphore, 100);
+    }
+    IvrLog::Inst()->Log("StartRenderingView");
     if (hWnd == NULL)
         return -2;
 
@@ -359,11 +387,8 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     }
     va_end(arg_ptr);
     m_MatrixModifyFlag = true;
-    auto lambdaRenderThread = [this, count]() {
-        m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
-        WaitForSingleObject(m_hSemaphore, 100);
+    auto lambdaRenderThread = [this, count]() {       
         isRendering = true;
-
         const int constFps = 60;
         while (isRendering) {
             std::this_thread::yield();
@@ -384,6 +409,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                 Sleep(DWORD(timeInOneFps - timeTotal));
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
+        IvrLog::Inst()->Log("End StartRenderingView");
     };
     std::thread(lambdaRenderThread).detach();
     return 1;
