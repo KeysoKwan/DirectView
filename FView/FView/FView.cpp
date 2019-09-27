@@ -20,8 +20,8 @@ dto::FViewRT fviewRT;
 /// errorCode >0 成功
 /// errorCode ==-1 如果不在我们自己的机器上
 /// errorCode ==-2 窗口句柄丢失
-/// errorCode ==-3 纹理句柄丢失
-/// errorCode ==-4 渲染设备初始化失败
+/// errorCode ==-3 渲染设备初始化失败
+/// errorCode ==-4 纹理句柄丢失
 /// errorCode ==-5 渲染等待进程超时
 /// errorCode ==-6 windows版本低于win10
 /// </returns>

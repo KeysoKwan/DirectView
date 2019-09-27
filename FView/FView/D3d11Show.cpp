@@ -303,6 +303,7 @@ void D3d11Show::EndRendering()
         ::PostMessage(m_ViewhWnd, WM_QUIT, 0, 0);
     }
     ReleaseSemaphore(m_hSemaphore, 1, NULL);
+    m_hSemaphore = NULL;
 }
 
 void D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type)
@@ -355,7 +356,6 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         m_hSemaphore = CreateSemaphoreA(NULL, 1, 1, m_SemaphoreName);
         WaitForSingleObject(m_hSemaphore, 100);
     }
-    IvrLog::Inst()->Log("StartRenderingView");
     if (hWnd == NULL)
         return -2;
 
@@ -409,7 +409,6 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                 Sleep(DWORD(timeInOneFps - timeTotal));
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
-        IvrLog::Inst()->Log("End StartRenderingView");
     };
     std::thread(lambdaRenderThread).detach();
     return 1;
