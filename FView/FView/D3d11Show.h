@@ -70,6 +70,7 @@ class D3d11Show
     std::thread m_renderingThread;
     HANDLE m_hSemaphore = NULL;
     const char* m_SemaphoreName = "D3D11SHOW_sem";
+    std::mutex m_mutex;
     DrawerManagerU3D::OrthoMatrixType m_OrthoMatrixType;
     //安全释放资源
     template <typename Res>
