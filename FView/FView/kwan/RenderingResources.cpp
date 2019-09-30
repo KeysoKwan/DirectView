@@ -1,7 +1,7 @@
 ﻿#include "RenderingResources.h"
 #include "IVR_Log.h"
 namespace dxshow {
-RenderingResources::RenderingResources()
+RenderingResources::RenderingResources():isValuable(false)
 {
 }
 
@@ -12,7 +12,8 @@ RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(cop
                                                                     m_MVPbuffer(copy.m_MVPbuffer),
                                                                     m_commandBuffer(copy.m_commandBuffer),
                                                                     _MVPmatrix(copy._MVPmatrix),
-                                                                    m_vp(copy.m_vp)
+                                                                    m_vp(copy.m_vp),
+                                                                    isValuable(copy.isValuable)
 {
     copy.m_device = 0;
     copy.m_vertexBuffer = 0;
@@ -102,6 +103,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateShaderResourceView(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
+        return;
     }
 
     m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
@@ -120,10 +122,12 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
         IvrLog::Inst()->Log(std::string(charBuf));
         return;
     }
+    isValuable = true;
 }
 
 RenderingResources::~RenderingResources()
 {
+    if (!isValuable) return;
     SafeRelease(m_d3dtex);
     SafeRelease(m_ResourceView);
     SafeRelease(m_MVPbuffer);
@@ -132,6 +136,7 @@ RenderingResources::~RenderingResources()
 
 void RenderingResources::UpdateMVPMatrix()
 {
+    if (!isValuable) return;
     using namespace DirectX;
     ID3D11DeviceContext* ctx = NULL;
     m_device->GetImmediateContext(&ctx);
@@ -157,6 +162,7 @@ void RenderingResources::UpdateMVPMatrix()
 
 void RenderingResources::Render(ID3D11DeviceContext* ctx, UINT index) const
 {
+    if (!isValuable) return;
     unsigned int stride = sizeof(VertexPos);
     unsigned int offset = 0;
 

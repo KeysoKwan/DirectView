@@ -38,7 +38,7 @@ class D3d11Show
     void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
     int InitD3D();
-    void SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
+    int SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
 
   public:
     bool isRendering;
@@ -72,6 +72,8 @@ class D3d11Show
     const char* m_SemaphoreName = "D3D11SHOW_sem";
     std::mutex m_mutex;
     DrawerManagerU3D::OrthoMatrixType m_OrthoMatrixType;
+    DWORD lastFailedTick;
+    bool isStarting;
     //安全释放资源
     template <typename Res>
     inline void SafeRelease(Res* ptr)

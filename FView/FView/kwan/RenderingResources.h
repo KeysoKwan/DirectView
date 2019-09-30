@@ -24,6 +24,7 @@ class RenderingResources
     void Render(ID3D11DeviceContext* ctx, UINT index) const;
     ResourceViewport GetResourceVieportType() const;
 
+    bool isValuable;
   private:
     struct VertexPos
     {
