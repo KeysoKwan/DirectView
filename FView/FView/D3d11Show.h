@@ -35,7 +35,7 @@ class D3d11Show
     void SetGamaSpace(U3DColorSpace space);
 
   private:
-    void RenderTexture();
+  //  void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
     int InitD3D();
     int SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
@@ -73,7 +73,8 @@ class D3d11Show
     std::mutex m_mutex;
     DrawerManagerU3D::OrthoMatrixType m_OrthoMatrixType;
     DWORD lastFailedTick;
-    bool isStarting;
+    size_t m_failedTime;
+    std::thread m_rthread;
     //安全释放资源
     template <typename Res>
     inline void SafeRelease(Res* ptr)

@@ -25,7 +25,7 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_OrthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D),
                          m_MatrixModifyFlag(false),
                          lastFailedTick(0),
-                         isStarting(false)
+                         m_failedTime(0)
 {
     std::vector<HWND> temp_vecHWnds;
     temp_vecHWnds.clear();
@@ -61,6 +61,12 @@ int D3d11Show::InitD3D()
     if (m_isInit) {
         return 0;
     }
+    if (m_failedTime > 20) {
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "InitD3D() failed more than 20 ,returning ... ");
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -2;
+    }
 
     D3D_FEATURE_LEVEL myFeatureLevel;
     UINT createDeviceFlags = 0;
@@ -83,7 +89,9 @@ int D3d11Show::InitD3D()
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
-        return -1;
+        m_failedTime++;
+        m_isInit = false;
+        return InitD3D();
     }
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
@@ -123,7 +131,9 @@ int D3d11Show::InitD3D()
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
-        return -2;
+        m_failedTime++;
+        m_isInit = false;
+        return InitD3D();
     }
     dxgiFactory->Release();
     dxgiAdapter->Release();
@@ -138,7 +148,9 @@ int D3d11Show::InitD3D()
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateRenderTargetView(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
-        return -3;
+        m_failedTime++;
+        m_isInit = false;
+        return InitD3D();
     }
     if (backBuffer)
         backBuffer->Release();
@@ -163,7 +175,9 @@ int D3d11Show::InitD3D()
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
-        return -4;
+        m_failedTime++;
+        m_isInit = false;
+        return InitD3D();
     }
     if (m_isGamaSpace == U3DColorSpace::Gama) {
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
@@ -172,7 +186,9 @@ int D3d11Show::InitD3D()
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf));
-            return -5;
+            m_failedTime++;
+            m_isInit = false;
+            return InitD3D();
         }
     }
     else {
@@ -182,7 +198,9 @@ int D3d11Show::InitD3D()
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf));
-            return -6;
+            m_failedTime++;
+            m_isInit = false;
+            return InitD3D();
         }
     }
 
@@ -199,11 +217,11 @@ int D3d11Show::InitD3D()
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf));
-            return -7;
+            m_failedTime++;
+            m_isInit = false;
+            return InitD3D();
         }
     }
-
-    m_isInit = true;
 
     D3D11_SAMPLER_DESC colorMapDesc;
     ZeroMemory(&colorMapDesc, sizeof(colorMapDesc));
@@ -221,8 +239,11 @@ int D3d11Show::InitD3D()
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf));
-        return -9;
+        m_failedTime++;
+        m_isInit = false;
+        return InitD3D();
     }
+    m_isInit = true;
     m_drawer.reset(new DrawerManagerU3D(m_sDevice));
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
@@ -233,6 +254,7 @@ int D3d11Show::InitD3D()
     if (m_u3dhWnd != NULL) {
         SetForegroundWindow(m_u3dhWnd);
     }
+    m_failedTime = 0;
     return 1;
 }
 
@@ -259,55 +281,10 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
     m_isInit = false;
 }
 
-void D3d11Show::RenderTexture()
-{
-    if (m_sDevice == nullptr) {
-        isRendering = false;
-        return;
-    }
-    ID3D11DeviceContext* ctx = NULL;
-    m_sDevice->GetImmediateContext(&ctx);
-    //渲染
-    float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};                        //背景颜色
-    ctx->ClearRenderTargetView(m_renderTargetView, clearColor); //清空视口
-    m_drawer->RenderAllResource(ctx);                           //渲染所有物体
-    HRESULT hr = m_swapChain->Present(1, 0);
-    if (FAILED(hr)) {
-        if (GetTickCount() - lastFailedTick < 1000.0f) {
-            IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!");
-            ////EndRendering();
-            //isRendering = false;
-            //if (m_ViewhWnd != NULL) {
-            //    ::PostMessage(m_ViewhWnd, WM_QUIT, 0, 0);
-            //}
-            ////Present Failed twice in a second, end rendering thread
-            //return;
-        }
-        lastFailedTick = GetTickCount();
-        isRendering = false;
-        char buff[64] = {};
-        sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
-        IvrLog::Inst()->Log(buff);
-        RealeaseD3d(false);
-        if (currentTexturePTR.size() == 1) {
-            StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
-        }
-        else if (currentTexturePTR.size() == 2) {
-            StartRenderingView(m_ViewhWnd, m_w, m_h, 2, currentTexturePTR[0], currentTexturePTR[1]);
-        }
-        //当出现渲染设备丢失时的异常处理，尝试重新创建一遍交换链路
-        //https://docs.microsoft.com/en-us/windows/uwp/gaming/handling-device-lost-scenarios
-       /* if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET) {
-            RealeaseD3d(false);
-            if (currentTexturePTR.size() == 1) {
-                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
-            }
-            else if (currentTexturePTR.size() == 2) {
-                StartRenderingView(m_ViewhWnd, m_w, m_h, 2, currentTexturePTR[0], currentTexturePTR[1]);
-            }
-        }*/
-    }
-}
+//void D3d11Show::RenderTexture()
+//{
+//
+//}
 
 void D3d11Show::EndRendering()
 {
@@ -326,9 +303,20 @@ int D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Resou
     if (m_sDevice == NULL || textureHandle == 0)
         return -1;
 
+    if (m_failedTime > 20) {
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "SetupTextureHandle(...) failed more than 20 ,returning ... ");
+        IvrLog::Inst()->Log(std::string(charBuf));
+        return -2;
+    }
+
     RenderingResources rs = RenderingResources(m_sDevice, (ID3D11Texture2D*)textureHandle, type);
-    if (!rs.isValuable) return -2;
+    if (!rs.isValuable) {
+        m_failedTime++;
+        return SetupTextureHandle(textureHandle, type);
+    }
     m_drawer->PushResources(std::move(rs));
+    m_failedTime = 0;
     return 1;
 }
 
@@ -345,18 +333,17 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
 
 int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
-    IvrLog::Inst()->Log("StartRenderingView called");
-    if (isStarting) {
-        IvrLog::Inst()->Log("rendering return");
+    if (!m_mutex.try_lock())
+    {
         return 0;
     }
-    isStarting = true;
+    IvrLog::Inst()->Log("StartRenderingView called");
+
     if (!IsWindows10OrGreater()) {
         IvrLog::Inst()->Log("You need at least Windows 10");
         if (hWnd != NULL) {
             ::PostMessage(hWnd, WM_QUIT, 0, 0);
         }
-        isStarting = false;
         return -6;
     }
     isRendering = false;
@@ -368,12 +355,10 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             break;
         case WAIT_TIMEOUT:
             IvrLog::Inst()->Log("StartRenderingView thread timeout!");
-            isStarting = false;
             return -5;
             break;
         case WAIT_FAILED:
             IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!");
-            isStarting = false;
             return -5;
             break;
         }
@@ -383,12 +368,9 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         WaitForSingleObject(m_hSemaphore, 100);
     }
 
-    if (hWnd == NULL)
-    {
-        isStarting = false;
+    if (hWnd == NULL) {
         return -2;
     }
-      
 
     if (hWnd != m_ViewhWnd) {
         if (m_drawer != nullptr) m_drawer.reset();
@@ -398,11 +380,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     m_ViewhWnd = hWnd;
     m_w = w;
     m_h = h;
-    if (InitD3D() < 0) {
-        isStarting = false;
-        return -3;
-    }
-    m_drawer->ClearResources();
+
     currentTexturePTR.clear();
     va_list arg_ptr;
     void* nArgValue;
@@ -410,30 +388,33 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     for (int i = 0; i < count; i++) {
         nArgValue = va_arg(arg_ptr, void*);
         if (nArgValue == nullptr) {
-            isStarting = false;
             return -4;
         }
-          
         currentTexturePTR.push_back(nArgValue);
+    }
+
+    if (InitD3D() < 0) {
+        return -3;
+    }
+    m_drawer->ClearResources();
+    for (int i = 0; i < count; i++) {
         if (count == 1) {
-            if (SetupTextureHandle(nArgValue, RenderingResources::ResourceViewport::FULL_VIEW) < 0) {
-                isStarting = false;
+            if (SetupTextureHandle(currentTexturePTR[i], RenderingResources::ResourceViewport::FULL_VIEW) < 0) {
                 return -4;
             }
-                
         }
         else {
-            if (SetupTextureHandle(nArgValue, (RenderingResources::ResourceViewport)(i + 1)) < 0) {
-                isStarting = false;
+            if (SetupTextureHandle(currentTexturePTR[i], (RenderingResources::ResourceViewport)(i + 1)) < 0) {
                 return -4;
             }
-               
         }
     }
     va_end(arg_ptr);
     m_MatrixModifyFlag = true;
-    auto lambdaRenderThread = [this, count]() {
+
+    auto lambdaRenderThread = [&]() {
         IvrLog::Inst()->Log("Render begin!");
+        int temp_resultCode = 0;
         isRendering = true;
         const int constFps = 60;
         while (isRendering) {
@@ -448,17 +429,58 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                     m_drawer->UpdateAllMatrix(m_OrthoMatrixType);
                     m_MatrixModifyFlag = false;
                 }
-                RenderTexture();
+                if (m_sDevice == nullptr) {
+                    isRendering = false;
+                    temp_resultCode = -1;
+                    return -1;
+                }
+                ID3D11DeviceContext* ctx = NULL;
+                m_sDevice->GetImmediateContext(&ctx);
+                //渲染
+                float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};            //背景颜色
+                ctx->ClearRenderTargetView(m_renderTargetView, clearColor); //清空视口
+                m_drawer->RenderAllResource(ctx);                           //渲染所有物体
+                HRESULT hr = m_swapChain->Present(1, 0);
+                ctx->Release();
+                if (FAILED(hr)) {
+                    if (GetTickCount() - lastFailedTick < 1000.0f) {
+                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!");
+                    }
+                    lastFailedTick = GetTickCount();
+                    isRendering = false;
+                    char buff[64] = {};
+                    sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
+                    IvrLog::Inst()->Log(buff);
+                    isRendering = false;
+                    temp_resultCode = -1;
+                }
             }
             DWORD timeTotal = GetTickCount() - timeBegin;
             if (timeTotal < timeInOneFps)
                 Sleep(DWORD(timeInOneFps - timeTotal));
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
-        IvrLog::Inst()->Log("Render end!");
+        char buff[64] = {};
+        sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
+        IvrLog::Inst()->Log(buff);
+        switch (temp_resultCode) {
+        case -1:
+            RealeaseD3d(false);
+            if (currentTexturePTR.size() == 1) {
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
+            }
+            else if (currentTexturePTR.size() == 2) {
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 2, currentTexturePTR[0], currentTexturePTR[1]);
+            }
+            break;
+        default:
+            break;
+        }
     };
-    std::thread(lambdaRenderThread).detach();
-    isStarting = false;
+    m_rthread = std::thread(lambdaRenderThread);
+    m_rthread.detach();
+    //std::thread(lambdaRenderThread).detach();
+    m_mutex.unlock();
     return 1;
 }
 } // namespace dxshow
