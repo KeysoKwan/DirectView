@@ -64,7 +64,7 @@ int D3d11Show::InitD3D()
     if (m_failedTime > 20) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D() failed more than 20 ,returning ... ");
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return -2;
     }
 
@@ -88,7 +88,7 @@ int D3d11Show::InitD3D()
     if (FAILED(hr)) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -130,7 +130,7 @@ int D3d11Show::InitD3D()
         //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -147,7 +147,7 @@ int D3d11Show::InitD3D()
         // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateRenderTargetView(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -174,7 +174,7 @@ int D3d11Show::InitD3D()
     if (FAILED(hr)) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -185,7 +185,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf));
+            IvrLog::Inst()->Log(std::string(charBuf),4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -197,7 +197,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf));
+            IvrLog::Inst()->Log(std::string(charBuf),4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -216,7 +216,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建输入布局失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf));
+            IvrLog::Inst()->Log(std::string(charBuf),4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -238,7 +238,7 @@ int D3d11Show::InitD3D()
         //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -306,7 +306,7 @@ int D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Resou
     if (m_failedTime > 20) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "SetupTextureHandle(...) failed more than 20 ,returning ... ");
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         return -2;
     }
 
@@ -337,10 +337,10 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     {
         return 0;
     }
-    IvrLog::Inst()->Log("StartRenderingView called");
+    IvrLog::Inst()->Log("StartRenderingView called",0);
 
     if (!IsWindows10OrGreater()) {
-        IvrLog::Inst()->Log("You need at least Windows 10");
+        IvrLog::Inst()->Log("You need at least Windows 10",4);
         if (hWnd != NULL) {
             ::PostMessage(hWnd, WM_QUIT, 0, 0);
         }
@@ -354,11 +354,11 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         case WAIT_OBJECT_0:
             break;
         case WAIT_TIMEOUT:
-            IvrLog::Inst()->Log("StartRenderingView thread timeout!");
+            IvrLog::Inst()->Log("StartRenderingView thread timeout!",4);
             return -5;
             break;
         case WAIT_FAILED:
-            IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!");
+            IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!",4);
             return -5;
             break;
         }
@@ -413,7 +413,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     m_MatrixModifyFlag = true;
 
     auto lambdaRenderThread = [&]() {
-        IvrLog::Inst()->Log("Render begin!");
+        IvrLog::Inst()->Log("Render begin!",0);
         int temp_resultCode = 0;
         isRendering = true;
         const int constFps = 60;
@@ -421,7 +421,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             std::this_thread::yield();
             if (!IsWindow(m_ViewhWnd)) {
                 EndRendering();
-            }
+            }           
             float timeInOneFps = 1000.0f / constFps;
             DWORD timeBegin = GetTickCount();
             if (!IsIconic(m_ViewhWnd)) {
@@ -444,13 +444,13 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                 ctx->Release();
                 if (FAILED(hr)) {
                     if (GetTickCount() - lastFailedTick < 1000.0f) {
-                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!");
+                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!",3);
                     }
                     lastFailedTick = GetTickCount();
                     isRendering = false;
                     char buff[64] = {};
                     sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
-                    IvrLog::Inst()->Log(buff);
+                    IvrLog::Inst()->Log(buff,4);
                     isRendering = false;
                     temp_resultCode = -1;
                 }
@@ -462,7 +462,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
         char buff[64] = {};
         sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
-        IvrLog::Inst()->Log(buff);
+        IvrLog::Inst()->Log(buff,0);
         switch (temp_resultCode) {
         case -1:
             RealeaseD3d(false);
@@ -476,6 +476,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         default:
             break;
         }
+        return 1;
     };
     m_rthread = std::thread(lambdaRenderThread);
     m_rthread.detach();

@@ -82,7 +82,7 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3
         /*MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);*/
         char charBuf[512];
         sprintf_s(charBuf, 512, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         return;
     }
 }

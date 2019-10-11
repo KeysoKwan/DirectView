@@ -87,7 +87,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
       //  MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         return;
     }
 
@@ -102,7 +102,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
    //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateShaderResourceView(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         return;
     }
 
@@ -119,7 +119,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_MVPbuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf));
+        IvrLog::Inst()->Log(std::string(charBuf),4);
         return;
     }
     isValuable = true;
@@ -142,7 +142,7 @@ void RenderingResources::UpdateMVPMatrix()
     m_device->GetImmediateContext(&ctx);
 
     switch (m_vp) {
-    case ResourceViewport::FULL_VIEW:
+    case ResourceViewport::FULL_VIEW: 
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
         break;
     case ResourceViewport::LEFT_HALF:
