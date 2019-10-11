@@ -333,8 +333,9 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
 
 int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
-    if (!m_mutex.try_lock())
+    if (!Rlock(&m_mutex).LockSuccessed())
     {
+        IvrLog::Inst()->Log("StartRenderingView called,but mutex is lock", 0);
         return 0;
     }
     IvrLog::Inst()->Log("StartRenderingView called",0);
@@ -369,6 +370,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     }
 
     if (hWnd == NULL) {
+        IvrLog::Inst()->Log("StartRenderingView(...) failed with error = Invaild HWND", 4);
         return -2;
     }
 
@@ -388,6 +390,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     for (int i = 0; i < count; i++) {
         nArgValue = va_arg(arg_ptr, void*);
         if (nArgValue == nullptr) {
+            IvrLog::Inst()->Log("StartRenderingView(...) failed with error = Invaild texture handle", 4);
             return -4;
         }
         currentTexturePTR.push_back(nArgValue);
@@ -400,11 +403,13 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     for (int i = 0; i < count; i++) {
         if (count == 1) {
             if (SetupTextureHandle(currentTexturePTR[i], RenderingResources::ResourceViewport::FULL_VIEW) < 0) {
+                IvrLog::Inst()->Log("StartRenderingView(...) failed with error = SetupTextureHandle Failed", 4);
                 return -4;
             }
         }
         else {
             if (SetupTextureHandle(currentTexturePTR[i], (RenderingResources::ResourceViewport)(i + 1)) < 0) {
+                IvrLog::Inst()->Log("StartRenderingView(...) failed with error = SetupTextureHandle Failed", 4);
                 return -4;
             }
         }
@@ -481,7 +486,6 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     m_rthread = std::thread(lambdaRenderThread);
     m_rthread.detach();
     //std::thread(lambdaRenderThread).detach();
-    m_mutex.unlock();
     return 1;
 }
 } // namespace dxshow

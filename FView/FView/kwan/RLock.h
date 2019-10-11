@@ -4,12 +4,13 @@ namespace dxshow {
 class Rlock
 {
   public:
-    Rlock(std::mutex* mu);
+    Rlock(std::mutex* mu);   
     ~Rlock();
-
+    bool LockSuccessed();
   private:
     Rlock(){};
     Rlock(const Rlock& cpy) {};
     std::mutex* m_Mutex;
+    bool m_lockSuccessed;
 };
 } // namespace dxshow
