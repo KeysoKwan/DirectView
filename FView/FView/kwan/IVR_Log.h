@@ -14,7 +14,7 @@ KeysoKwan 2019.10.11
 
 #    include "spdlog/spdlog.h"
 #    include "spdlog/logger.h"
-#    include "spdlog/sinks/basic_file_sink.h"
+#    include "spdlog/sinks/rotating_file_sink.h"
 
 class IvrLog
 {
@@ -23,7 +23,7 @@ class IvrLog
     {
         if (0 == _instance.get()) {
             _instance.reset(new IvrLog);
-            filelogger = spdlog::basic_logger_mt("FARlog", "FAR_debug.log");
+            filelogger = spdlog::rotating_logger_mt("FARlog", "FAR_debug.log", 1048576 * 5, 1);
             spdlog::set_level(spdlog::level::trace);
             filelogger->flush_on(spdlog::level::level_enum::trace);
             filelogger->info("--------Log begin---------");
