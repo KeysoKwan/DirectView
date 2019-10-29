@@ -2,7 +2,7 @@
 #define DrawerManager_H
 
 #include <vector>
-#include <d3d11.h>
+#include <d3d11_2.h>
 #include <DirectXMath.h>
 #include "IVR_Log.h"
 
@@ -15,11 +15,12 @@ class DrawerManager
     enum class OrthoMatrixType
     {
         T_2D = 0,
-        T_3Dleftright = 1
+        T_3Dleftright = 1,
+        T_Stereopic = 2
     };
 
     DrawerManager<Resource>();
-    DrawerManager<Resource>(ID3D11Device* d3dDevice);
+    DrawerManager<Resource>(ID3D11Device* d3dDevice, IDXGISwapChain1* d3dSwapchian);
     ~DrawerManager<Resource>();
 
     int GetManagerSize() const;
@@ -36,6 +37,8 @@ class DrawerManager
     void RenderAllResource(ID3D11DeviceContext* ctx);
     //更新排列渲染矩阵
     void UpdateAllMatrix(OrthoMatrixType type);
+    //更新渲染视图目标
+    int UpdateRenderingDependent(bool isStereoipic);
 
   private:
     struct ProjectBuffer
@@ -44,17 +47,28 @@ class DrawerManager
         DirectX::XMMATRIX _ortho;
     };
     ID3D11Device* m_d3dDevice;
+    IDXGISwapChain1* m_d3dSwapchain;
+    bool m_stereoEnable;
+    bool m_dirFlag;
+
+    ID3D11RenderTargetView* m_renderTargetView;
+    ID3D11RenderTargetView* m_renderTargetViewRight;
+    ID3D11DepthStencilView* m_d3dDepthStencilView;
+
     std::vector<Resource> m_resourcesStarck;
 
     ProjectBuffer m_projectMatrix;
     ID3D11Buffer* m_projectBuffer;
-
     OrthoMatrixType m_orthoMatrixType;
 
     template <typename Res>
     inline void SafeRelease(Res* ptr)
     {
-        if (ptr != 0) ptr->Release();
+        if (ptr != nullptr) {
+            if (ptr != 0)
+                ptr->Release();
+            ptr = nullptr;
+        }
     }
 };
 
@@ -65,9 +79,18 @@ DrawerManager<Resource>::DrawerManager()
 }
 
 template <typename Resource>
-DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3dDevice), m_orthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D)
+DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
+                                       IDXGISwapChain1* d3dSwapchain) : m_d3dDevice(d3dDevice),
+                                                                        m_d3dSwapchain(d3dSwapchain),
+                                                                        m_renderTargetView(nullptr),
+                                                                        m_renderTargetViewRight(nullptr),
+                                                                        m_d3dDepthStencilView(nullptr),
+                                                                        m_stereoEnable(false),
+                                                                        m_dirFlag(false),
+                                                                        m_orthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D)
 {
     using namespace DirectX;
+
     m_resourcesStarck.clear();
     m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 20.0f));
     m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0, 0, 1, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
@@ -82,7 +105,7 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice) : m_d3dDevice(d3
         /*MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);*/
         char charBuf[512];
         sprintf_s(charBuf, 512, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return;
     }
 }
@@ -92,6 +115,9 @@ DrawerManager<Resource>::~DrawerManager()
 {
     m_resourcesStarck.clear();
     SafeRelease(m_projectBuffer);
+    SafeRelease(m_renderTargetView);
+    SafeRelease(m_renderTargetViewRight);
+    SafeRelease(m_d3dDepthStencilView);
 }
 
 template <typename Resource>
@@ -139,12 +165,39 @@ template <typename Resource>
 void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 {
     if (ctx != NULL) {
-        typename std::vector<Resource>::iterator iter = m_resourcesStarck.begin();
-        for (iter; iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
-        {
-            (*iter).Render(ctx, 6);
+
+        if (!m_stereoEnable) {
+            if (m_renderTargetView == nullptr) {
+                UpdateRenderingDependent(m_stereoEnable);
+            }
+            ctx->OMSetRenderTargets(1, &m_renderTargetView, 0);
+            float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};            //背景颜色
+            ctx->ClearRenderTargetView(m_renderTargetView, clearColor); //清空视口
+            typename std::vector<Resource>::iterator iter = m_resourcesStarck.begin();
+            for (iter; iter != m_resourcesStarck.end(); iter++) //遍历渲染整个容器
+            {
+                (*iter).Render(ctx, 6);
+            }
+            ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
         }
-        ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
+        else if (m_stereoEnable && m_resourcesStarck.size() == 2) {
+            if (m_renderTargetViewRight == nullptr || !m_dirFlag) {
+                UpdateRenderingDependent(m_stereoEnable);
+                UpdateAllMatrix(OrthoMatrixType::T_Stereopic);
+                m_dirFlag = true;
+            }
+
+            //渲染左眼图像
+            ctx->OMSetRenderTargets(1, &m_renderTargetView, 0);
+            float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};            
+            ctx->ClearRenderTargetView(m_renderTargetView, clearColor); 
+            m_resourcesStarck[0].Render(ctx, 6);
+            //渲染右眼图像
+            ctx->OMSetRenderTargets(1, &m_renderTargetViewRight, 0);
+            ctx->ClearRenderTargetView(m_renderTargetViewRight, clearColor);                                                         
+            m_resourcesStarck[1].Render(ctx, 6);
+            ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
+        }
     }
 }
 
@@ -160,6 +213,7 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
     m_orthoMatrixType = type;
     ID3D11DeviceContext* ctx = NULL;
     m_d3dDevice->GetImmediateContext(&ctx);
+    typename std::vector<Resource>::iterator iter;
     if (m_resourcesStarck.size() == 1) {
         //   MessageBox(NULL, L"m_resourcesStarck.size() == 1", L"error", MB_OK);
         m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
@@ -180,28 +234,125 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
                 m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
                 m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
             }
+
+            for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
+                (*iter).UpdateMVPMatrix();
+            }
             break;
         case OrthoMatrixType::T_3Dleftright:
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+            for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
+                (*iter).UpdateMVPMatrix();
+            }
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+            break;
+        case OrthoMatrixType::T_Stereopic:
+            m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+            for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
+                (*iter).ResetToSteropicMatirx(ctx);
+            }
             break;
         default:
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
             m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
+            for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
+                (*iter).UpdateMVPMatrix();
+            }
             break;
         }
     }
-
     //m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0, 0, 0, 1.0f), XMVectorSet(0, 0, 1, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
     //   m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2 * m_resourcesStarck.size(), 2, 0.1, 5));
     ctx->UpdateSubresource(m_projectBuffer, 0, NULL, &m_projectMatrix, 0, 0);
     ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
-
-    typename std::vector<Resource>::iterator iter;
-    for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
-        (*iter).UpdateMVPMatrix();
-    }
     ctx->Release();
+}
+
+template <typename Resource>
+inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
+{
+    IvrLog::Inst()->Log(std::string("UpdateRenderingDependent"), 0);
+    m_stereoEnable = isStereoipic;
+    SafeRelease(m_renderTargetView);
+    SafeRelease(m_renderTargetViewRight);
+    SafeRelease(m_d3dDepthStencilView);
+    //创建渲染目标视图
+    ID3D11Texture2D* backBuffer(NULL);
+    CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(
+        D3D11_RTV_DIMENSION_TEXTURE2DARRAY,
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        0,
+        0,
+        1);
+    m_d3dSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
+    HRESULT hr = m_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
+    if (FAILED(hr)) {
+        // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+    }
+
+    D3D11_TEXTURE2D_DESC backBufferDesc = {0};
+    backBuffer->GetDesc(&backBufferDesc);
+    if (m_stereoEnable && m_resourcesStarck.size() == 2) {
+        CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewRightDesc(
+            D3D11_RTV_DIMENSION_TEXTURE2DARRAY,
+            DXGI_FORMAT_B8G8R8A8_UNORM,
+            0,
+            1,
+            1);
+        hr = m_d3dDevice->CreateRenderTargetView(backBuffer, &renderTargetViewRightDesc, &m_renderTargetViewRight);
+        if (FAILED(hr)) {
+            // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
+            char charBuf[512];
+            sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
+            IvrLog::Inst()->Log(std::string(charBuf), 4);
+        }
+    }
+
+    // Create a descriptor for the depth/stencil buffer.
+    D3D11_TEXTURE2D_DESC depthTexDesc;
+    ZeroMemory(&depthTexDesc, sizeof(depthTexDesc));
+    depthTexDesc.Width = backBufferDesc.Width;
+    depthTexDesc.Height = backBufferDesc.Height;
+    depthTexDesc.MipLevels = 1;
+    depthTexDesc.ArraySize = 1;
+    depthTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthTexDesc.SampleDesc.Count = 1;
+    depthTexDesc.SampleDesc.Quality = 0;
+    depthTexDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthTexDesc.CPUAccessFlags = 0;
+
+    // Allocate a 2-D surface as the depth/stencil buffer.
+    ID3D11Texture2D* depthStencil;
+    m_d3dDevice->CreateTexture2D(
+        &depthTexDesc,
+        nullptr,
+        &depthStencil);
+    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+    ZeroMemory(&descDSV, sizeof(descDSV));
+    descDSV.Format = depthTexDesc.Format;
+    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    descDSV.Texture2D.MipSlice = 0;
+
+    hr = m_d3dDevice->CreateDepthStencilView(
+        depthStencil,
+        &descDSV,
+        &m_d3dDepthStencilView);
+
+    if (FAILED(hr)) {
+        // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateDepthStencilView(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+    }
+    SafeRelease(depthStencil);
+    backBuffer->Release();
+
+    return 0;
 }
 } // namespace dxshow
 #endif

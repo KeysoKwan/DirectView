@@ -57,6 +57,25 @@ _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
     return -2;
 }
 
+///<summary>
+///切换为帧连续3D显示，更新窗口视口位置
+///</summary>
+///<param name="stereoEnable">投屏窗口是否开启帧连续3D</param>
+///<param name="newWidth">新的窗口宽度</param>
+///<param name="newHeight">新的窗口高度</param>
+_VSAPI_ int fmAROnWindowResized(bool stereoEnable,int newWidth,int newHeight)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+   /* if (MCDevice::GetInst()->ReadID() == 0) {
+        return -1;
+    }*/
+
+    m_d3d11show.m_stereoEnabled = stereoEnable;
+    m_d3d11show.OnWindowsResized = true;
+    m_d3d11show.m_w = newWidth;
+    m_d3d11show.m_h = newHeight;
+    return 1;
+}
 //_VSAPI_ int fmARStartView_LRDX12(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
 //{
 //    //如果不在我们自己的机器上,那么就直接返回

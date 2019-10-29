@@ -40,6 +40,7 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+*.log
 /U3D/Bin
 /U3D/Logs
 /U3D/Packages

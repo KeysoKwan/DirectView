@@ -1,7 +1,7 @@
 ﻿#include "RenderingResources.h"
 #include "IVR_Log.h"
 namespace dxshow {
-RenderingResources::RenderingResources():isValuable(false)
+RenderingResources::RenderingResources() : isValuable(false)
 {
 }
 
@@ -13,7 +13,8 @@ RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(cop
                                                                     m_commandBuffer(copy.m_commandBuffer),
                                                                     _MVPmatrix(copy._MVPmatrix),
                                                                     m_vp(copy.m_vp),
-                                                                    isValuable(copy.isValuable)
+                                                                    isValuable(copy.isValuable),
+                                                                    updateFlag(false)
 {
     copy.m_device = 0;
     copy.m_vertexBuffer = 0;
@@ -22,7 +23,7 @@ RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(cop
     copy.m_MVPbuffer = 0;
 }
 
-RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : m_device(device), m_d3dtex(d3dtex), m_vp(vp)
+RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : m_device(device), m_d3dtex(d3dtex), m_vp(vp), updateFlag(false)
 {
     using namespace DirectX;
     //m_device = device;
@@ -49,9 +50,9 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     case ResourceViewport::FULL_VIEW:
         break;
     case ResourceViewport::LEFT_HALF:
-        vertices[0].tex0.x = 0.5f;
+       /* vertices[0].tex0.x = 0.5f;
         vertices[1].tex0.x = 0.5f;
-        vertices[5].tex0.x = 0.5f;
+        vertices[5].tex0.x = 0.5f;*/
         /*VertexPos vertices[] =
                 {
                     {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(0.5f, 1.0f)},
@@ -64,9 +65,9 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
                 };*/
         break;
     case ResourceViewport::RIGHT_HALF:
-        vertices[2].tex0.x = 0.5f;
+       /* vertices[2].tex0.x = 0.5f;
         vertices[3].tex0.x = 0.5f;
-        vertices[4].tex0.x = 0.5f;
+        vertices[4].tex0.x = 0.5f;*/
         /*VertexPos vertices[] =
                 {
                     {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
@@ -84,10 +85,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     resourceData.pSysMem = vertices;
     HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
     if (FAILED(hr)) {
-      //  MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+        //  MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return;
     }
 
@@ -99,10 +100,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
 
     hr = m_device->CreateShaderResourceView(m_d3dtex, &vdesc, &m_ResourceView);
     if (FAILED(hr)) {
-   //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
+        //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateShaderResourceView(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return;
     }
 
@@ -116,10 +117,10 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     hr = m_device->CreateBuffer(&commandDesc, NULL, &m_MVPbuffer);
 
     if (FAILED(hr)) {
-    //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+        //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "RenderingResources:CreateBuffer(m_MVPbuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return;
     }
     isValuable = true;
@@ -142,7 +143,7 @@ void RenderingResources::UpdateMVPMatrix()
     m_device->GetImmediateContext(&ctx);
 
     switch (m_vp) {
-    case ResourceViewport::FULL_VIEW: 
+    case ResourceViewport::FULL_VIEW:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
         break;
     case ResourceViewport::LEFT_HALF:
@@ -158,6 +159,50 @@ void RenderingResources::UpdateMVPMatrix()
 
     ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
     ctx->Release();
+}
+
+void RenderingResources::ResetToSteropicMatirx(ID3D11DeviceContext* ctx)
+{
+    if (!isValuable) return;
+    using namespace DirectX;
+    if (!updateFlag) {
+        m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
+        ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
+        IvrLog::Inst()->Log(std::string("RenderingResources::ResetToSteropicMatirx(...)"), 4);
+
+        SafeRelease(m_vertexBuffer);
+        D3D11_BUFFER_DESC vertexDesc;
+        ZeroMemory(&vertexDesc, sizeof(vertexDesc));
+        vertexDesc.Usage = D3D11_USAGE_DEFAULT;
+        vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        vertexDesc.ByteWidth = sizeof(VertexPos) * 6;
+
+        D3D11_SUBRESOURCE_DATA resourceData;
+        ZeroMemory(&resourceData, sizeof(resourceData));
+        VertexPos vertices[] =
+            {
+                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+                {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
+                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+
+                {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
+                {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
+                {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
+            };
+        resourceData.pSysMem = vertices;
+        // ctx->UpdateSubresource(m_vertexBuffer, 0, NULL, &resourceData, 0, 0);
+
+        HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
+        if (FAILED(hr)) {
+            MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
+            char charBuf[512];
+            sprintf_s(charBuf, 512, "ResetToSteropicMatirx:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
+            IvrLog::Inst()->Log(std::string(charBuf), 4);
+            return;
+        }
+
+        updateFlag = true;
+    }
 }
 
 void RenderingResources::Render(ID3D11DeviceContext* ctx, UINT index) const

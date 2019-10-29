@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <d3d11.h>
+#include <d3d11_2.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <memory>
@@ -33,6 +33,7 @@ class D3d11Show
     int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
     void SwichProjector(DrawerManagerU3D::OrthoMatrixType type);
     void SetGamaSpace(U3DColorSpace space);
+    bool UpdateStereoEnabledStatus();
 
   private:
   //  void RenderTexture();
@@ -42,25 +43,29 @@ class D3d11Show
 
   public:
     bool isRendering;
+    bool OnWindowsResized;
+    int m_w;
+    int m_h;
+    bool m_stereoEnabled;
 
   private:
-    ID3D11Device* m_sDevice;
-    ID3D11DeviceContext* m_deviceContext;
-    IDXGISwapChain* m_swapChain;
-    ID3D11RenderTargetView* m_renderTargetView;
+    ID3D11Device2* m_sDevice;
+    ID3D11DeviceContext2* m_deviceContext;
+    IDXGISwapChain1* m_swapChain;
+  
     ID3D11VertexShader* solidColorVS_;
     ID3D11PixelShader* solidColorPS_;
     ID3D11InputLayout* inputLayout_;
     ID3D11SamplerState* colorMapSampler_;
+
+    
 
     //新增渲染类智能指针对象
     std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
     //存下当前纹理指针，用于异常处理
     std::vector<void*> currentTexturePTR;
 
-    U3DColorSpace m_isGamaSpace;
-    int m_w;
-    int m_h;
+    U3DColorSpace m_isGamaSpace;   
     HWND m_ViewhWnd;
     HWND m_u3dhWnd;
 

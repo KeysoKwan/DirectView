@@ -21,10 +21,12 @@ class RenderingResources
     RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp = ResourceViewport::FULL_VIEW);
     ~RenderingResources();
     void UpdateMVPMatrix();
+    void ResetToSteropicMatirx(ID3D11DeviceContext* ctx);
     void Render(ID3D11DeviceContext* ctx, UINT index) const;
     ResourceViewport GetResourceVieportType() const;
 
     bool isValuable;
+
   private:
     struct VertexPos
     {
@@ -35,7 +37,7 @@ class RenderingResources
     {
         DirectX::XMMATRIX _world;
     };
-
+    bool updateFlag;
     ID3D11Device* m_device;
     ID3D11Buffer* m_vertexBuffer;
     ID3D11Texture2D* m_d3dtex;
@@ -47,8 +49,11 @@ class RenderingResources
     template <typename Res>
     inline void SafeRelease(Res* ptr)
     {
-        if (ptr != 0) ptr->Release();
-        ptr = 0;
+        if (ptr != nullptr) {
+            if (ptr != 0)
+                ptr->Release();
+            ptr = 0;
+        }
     }
 };
 } // namespace dxshow

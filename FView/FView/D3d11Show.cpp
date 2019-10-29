@@ -11,12 +11,14 @@ namespace dxshow {
 D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_deviceContext(NULL),
                          m_swapChain(NULL),
-                         m_renderTargetView(NULL),
+                         /*         m_renderTargetView(NULL),*/
                          solidColorVS_(NULL),
                          solidColorPS_(NULL),
                          inputLayout_(NULL),
                          colorMapSampler_(NULL),
+                         m_stereoEnabled(false),
                          isRendering(false),
+                         OnWindowsResized(false),
                          m_ViewhWnd(NULL),
                          m_isGamaSpace(U3DColorSpace::Gama),
                          m_w(0),
@@ -68,31 +70,47 @@ int D3d11Show::InitD3D()
         return -2;
     }
 
+    D3D_FEATURE_LEVEL featureLevels[] =
+        {
+            D3D_FEATURE_LEVEL_11_1,
+            D3D_FEATURE_LEVEL_11_0,
+            D3D_FEATURE_LEVEL_10_1,
+            D3D_FEATURE_LEVEL_10_0,
+            D3D_FEATURE_LEVEL_9_3,
+            D3D_FEATURE_LEVEL_9_2,
+            D3D_FEATURE_LEVEL_9_1};
     D3D_FEATURE_LEVEL myFeatureLevel;
-    UINT createDeviceFlags = 0;
+    UINT createDeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #if defined(DEBUG) || defined(_DEBUG)
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-
+    ID3D11Device* device;
+    ID3D11DeviceContext* context;
     HRESULT hr = D3D11CreateDevice(
         NULL, // 默认显示适配器
         D3D_DRIVER_TYPE_HARDWARE,
         0, // 不使用软件设备
         createDeviceFlags,
-        NULL, 0, // 默认的特征等级数组
+        featureLevels,
+        ARRAYSIZE(featureLevels),
         D3D11_SDK_VERSION,
-        &m_sDevice,
+        &device,
         &myFeatureLevel,
-        &m_deviceContext);
+        &context);
 
     if (FAILED(hr)) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
     }
+    device->QueryInterface(__uuidof(ID3D11Device2), (void**)(&m_sDevice));
+    context->QueryInterface(__uuidof(ID3D11DeviceContext2), (void**)(&m_deviceContext));
+    device->Release();
+    context->Release();
+    //m_sDevice
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
     m_sDevice->CheckMultisampleQualityLevels(
@@ -100,7 +118,7 @@ int D3d11Show::InitD3D()
         4,
         &m4xMsaaQuality);
     //准备交换链属性
-    DXGI_SWAP_CHAIN_DESC sd = {0};
+    /* DXGI_SWAP_CHAIN_DESC sd = {0};
     sd.BufferDesc.Width = m_w;
     sd.BufferDesc.Height = m_h;
     sd.BufferDesc.RefreshRate.Numerator = 60;
@@ -116,21 +134,43 @@ int D3d11Show::InitD3D()
     sd.OutputWindow = m_ViewhWnd;
     sd.Windowed = true;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    sd.Flags = 0;
+    sd.Flags = 0;*/
+
+    // Allocate a descriptor.
+    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
+    swapChainDesc.Width = 0; // Use automatic sizing.
+    swapChainDesc.Height = 0;
+    swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // This is the most common swap chain format.
+    swapChainDesc.Stereo = m_stereoEnabled;
+    swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
+    swapChainDesc.SampleDesc.Quality = 0;
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swapChainDesc.BufferCount = 2; // Use double buffering to minimize latency.
+    swapChainDesc.Scaling = DXGI_SCALING_NONE;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // All Windows Store apps must use this SwapEffect.
+    swapChainDesc.Flags = 0;
 
     //创建交换链
-    IDXGIDevice* dxgiDevice(NULL);
+    IDXGIDevice1* dxgiDevice(NULL);
     m_sDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)(&dxgiDevice));
     IDXGIAdapter* dxgiAdapter(NULL);
-    dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)(&dxgiAdapter));
-    IDXGIFactory* dxgiFactory(NULL);
-    dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)(&dxgiFactory));
-    hr = dxgiFactory->CreateSwapChain(m_sDevice, &sd, &m_swapChain);
+    dxgiDevice->GetAdapter(&dxgiAdapter);
+    IDXGIFactory2* dxgiFactory(NULL);
+    dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)(&dxgiFactory));
+
+    DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullScreenDesc;
+    ZeroMemory(&fullScreenDesc, sizeof(fullScreenDesc));
+    fullScreenDesc.RefreshRate.Numerator = 60;
+    fullScreenDesc.RefreshRate.Denominator = 1;
+    fullScreenDesc.Windowed = TRUE;
+
+    //hr = dxgiFactory->CreateSwapChain(m_sDevice, &sd, &m_swapChain);
+    hr = dxgiFactory->CreateSwapChainForHwnd(dxgiDevice, m_ViewhWnd, &swapChainDesc, &fullScreenDesc, nullptr, &m_swapChain);
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -139,27 +179,15 @@ int D3d11Show::InitD3D()
     dxgiAdapter->Release();
     dxgiDevice->Release();
 
-    //创建渲染目标视图
-    ID3D11Texture2D* backBuffer(NULL);
-    m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
-    hr = m_sDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
-    if (FAILED(hr)) {
-        // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D():CreateRenderTargetView(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
-        m_failedTime++;
-        m_isInit = false;
-        return InitD3D();
-    }
-    if (backBuffer)
-        backBuffer->Release();
+    //  m_renderTargetSize.Width = static_cast<float>(backBufferDesc.Width);
+    //   m_renderTargetSize.Height = static_cast<float>(backBufferDesc.Height);
 
     // 将视图绑定到输出合并器阶段
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, 0);
-
+    // m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, 0);
+    /*if (backBuffer)
+        backBuffer->Release();*/
     // 设置视口
-    D3D11_VIEWPORT vp = {0};
+    /*D3D11_VIEWPORT vp = {0};
     vp.TopLeftX = 0.f;
     vp.TopLeftY = 0.f;
     vp.Width = static_cast<float>(m_w);
@@ -167,14 +195,14 @@ int D3d11Show::InitD3D()
     vp.MinDepth = 0.f;
     vp.MaxDepth = 1.f;
 
-    m_deviceContext->RSSetViewports(1, &vp);
+    m_deviceContext->RSSetViewports(1, &vp);*/
 
     // shaders
     hr = m_sDevice->CreateVertexShader(g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), nullptr, &solidColorVS_);
     if (FAILED(hr)) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
@@ -185,7 +213,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf),4);
+            IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -197,7 +225,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf),4);
+            IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -216,7 +244,7 @@ int D3d11Show::InitD3D()
             //MessageBox(NULL, L"创建输入布局失败!", L"error", MB_OK);
             char charBuf[512];
             sprintf_s(charBuf, 512, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
-            IvrLog::Inst()->Log(std::string(charBuf),4);
+            IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
             return InitD3D();
@@ -238,13 +266,13 @@ int D3d11Show::InitD3D()
         //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
         char charBuf[512];
         sprintf_s(charBuf, 512, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
         return InitD3D();
     }
     m_isInit = true;
-    m_drawer.reset(new DrawerManagerU3D(m_sDevice));
+    m_drawer.reset(new DrawerManagerU3D(m_sDevice, m_swapChain));
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
@@ -270,7 +298,7 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
     SafeRelease(solidColorVS_);
     SafeRelease(solidColorPS_);
     SafeRelease(inputLayout_);
-    SafeRelease(m_renderTargetView);
+    //SafeRelease(m_renderTargetView);
     SafeRelease(m_swapChain);
     SafeRelease(m_deviceContext);
     SafeRelease(m_sDevice);
@@ -306,7 +334,7 @@ int D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Resou
     if (m_failedTime > 20) {
         char charBuf[512];
         sprintf_s(charBuf, 512, "SetupTextureHandle(...) failed more than 20 ,returning ... ");
-        IvrLog::Inst()->Log(std::string(charBuf),4);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
         return -2;
     }
 
@@ -322,8 +350,11 @@ int D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::Resou
 
 void D3d11Show::SwichProjector(DrawerManagerU3D::OrthoMatrixType type)
 {
-    m_OrthoMatrixType = type;
-    m_MatrixModifyFlag = true;
+    //立体渲染下不允许切换左右视图
+    if (m_OrthoMatrixType != DrawerManagerU3D::OrthoMatrixType::T_Stereopic) {
+        m_OrthoMatrixType = type;
+        m_MatrixModifyFlag = true;
+    }
 }
 
 void D3d11Show::SetGamaSpace(U3DColorSpace space)
@@ -331,17 +362,60 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
     m_isGamaSpace = space;
 }
 
+bool D3d11Show::UpdateStereoEnabledStatus()
+{
+    if (!m_isInit) {
+        IvrLog::Inst()->Log(std::string("UpdateStereoEnabledStatus():QueryInterface(...) failed with error = not init"), 4);
+        return false;
+    }
+
+    IDXGIDevice1* dxgiDevice;
+    HRESULT hr = m_sDevice->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgiDevice);
+    if (FAILED(hr)) {
+        //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():QueryInterface(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+        return false;
+    }
+    IDXGIAdapter* dxgiAdapter;
+    hr = dxgiDevice->GetAdapter(&dxgiAdapter);
+    if (FAILED(hr)) {
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+        SafeRelease(dxgiDevice);
+        return false;
+    }
+
+    IDXGIFactory2* dxgiFactory;
+    hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
+    if (FAILED(hr)) {
+        char charBuf[512];
+        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+        SafeRelease(dxgiDevice);
+        SafeRelease(dxgiAdapter);
+        return false;
+    }
+    bool temp_stereoEnabled = dxgiFactory->IsWindowedStereoEnabled() ? true : false;
+    SafeRelease(dxgiDevice);
+    SafeRelease(dxgiAdapter);
+    SafeRelease(dxgiFactory);
+    return temp_stereoEnabled;
+}
+
 int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
-    if (!Rlock(&m_mutex).LockSuccessed())
-    {
+    if (!Rlock(&m_mutex).LockSuccessed()) {
         IvrLog::Inst()->Log("StartRenderingView called,but mutex is lock", 0);
         return 0;
     }
-    IvrLog::Inst()->Log("StartRenderingView called",0);
+    IvrLog::Inst()->Log("StartRenderingView called", 0);
 
     if (!IsWindows10OrGreater()) {
-        IvrLog::Inst()->Log("You need at least Windows 10",4);
+        IvrLog::Inst()->Log("You need at least Windows 10", 4);
+        m_ViewhWnd = hWnd;
         if (hWnd != NULL) {
             ::PostMessage(hWnd, WM_QUIT, 0, 0);
         }
@@ -355,11 +429,11 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         case WAIT_OBJECT_0:
             break;
         case WAIT_TIMEOUT:
-            IvrLog::Inst()->Log("StartRenderingView thread timeout!",4);
+            IvrLog::Inst()->Log("StartRenderingView thread timeout!", 4);
             return -5;
             break;
         case WAIT_FAILED:
-            IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!",4);
+            IvrLog::Inst()->Log("StartRenderingView thread WAIT_FAILED!", 4);
             return -5;
             break;
         }
@@ -380,8 +454,8 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     }
 
     m_ViewhWnd = hWnd;
-    m_w = w;
-    m_h = h;
+    //m_w = w;
+    //m_h = h;
 
     currentTexturePTR.clear();
     va_list arg_ptr;
@@ -418,7 +492,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     m_MatrixModifyFlag = true;
 
     auto lambdaRenderThread = [&]() {
-        IvrLog::Inst()->Log("Render begin!",0);
+        IvrLog::Inst()->Log("Render begin!", 0);
         int temp_resultCode = 0;
         isRendering = true;
         const int constFps = 60;
@@ -426,7 +500,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             std::this_thread::yield();
             if (!IsWindow(m_ViewhWnd)) {
                 EndRendering();
-            }           
+            }
             float timeInOneFps = 1000.0f / constFps;
             DWORD timeBegin = GetTickCount();
             if (!IsIconic(m_ViewhWnd)) {
@@ -439,23 +513,51 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                     temp_resultCode = -1;
                     return -1;
                 }
-                ID3D11DeviceContext* ctx = NULL;
-                m_sDevice->GetImmediateContext(&ctx);
-                //渲染
-                float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};            //背景颜色
-                ctx->ClearRenderTargetView(m_renderTargetView, clearColor); //清空视口
-                m_drawer->RenderAllResource(ctx);                           //渲染所有物体
-                HRESULT hr = m_swapChain->Present(1, 0);
-                ctx->Release();
+                if (OnWindowsResized) {
+                    if (m_stereoEnabled) {
+                        m_stereoEnabled = UpdateStereoEnabledStatus();
+                        char buff[64] = {};
+                        sprintf_s(buff, "lambdaRenderThread: stereoEnabled = %d", m_stereoEnabled);
+                        IvrLog::Inst()->Log(buff, 0);
+                    }
+                    m_drawer->UpdateRenderingDependent(m_stereoEnabled);
+                    D3D11_VIEWPORT vp = {0};
+                    vp.TopLeftX = 0.f;
+                    vp.TopLeftY = 0.f;
+                    vp.Width = static_cast<float>(m_w);
+                    vp.Height = static_cast<float>(m_h);
+                    vp.MinDepth = 0.f;
+                    vp.MaxDepth = 1.f;
+                    m_deviceContext->RSSetViewports(1, &vp);
+                    OnWindowsResized = false;
+                    char buff[64] = {};
+                    sprintf_s(buff, "lambdaRenderThread: vp.Width = %d  ,vp.Height = %d", m_w, m_h);
+                    IvrLog::Inst()->Log(buff, 0);
+                }
+                // ID3D11DeviceContext* ctx = NULL;
+                // m_sDevice->GetImmediateContext(&ctx);
+                m_drawer->RenderAllResource(m_deviceContext); //渲染所有物体
+
+                DXGI_PRESENT_PARAMETERS parameters = {0};
+                parameters.DirtyRectsCount = 0;
+                parameters.pDirtyRects = nullptr;
+                parameters.pScrollRect = nullptr;
+                parameters.pScrollOffset = nullptr;
+                // The first argument instructs DXGI to block until VSync, putting the application
+                // to sleep until the next VSync. This ensures we don't waste any cycles rendering
+                // frames that will never be displayed to the screen.
+                HRESULT hr = m_swapChain->Present1(1, 0, &parameters);
+                // HRESULT hr = m_swapChain->Present(1, 0);
+
                 if (FAILED(hr)) {
                     if (GetTickCount() - lastFailedTick < 1000.0f) {
-                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!",3);
+                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!", 3);
                     }
                     lastFailedTick = GetTickCount();
                     isRendering = false;
                     char buff[64] = {};
                     sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
-                    IvrLog::Inst()->Log(buff,4);
+                    IvrLog::Inst()->Log(buff, 4);
                     isRendering = false;
                     temp_resultCode = -1;
                 }
@@ -467,7 +569,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
         char buff[64] = {};
         sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
-        IvrLog::Inst()->Log(buff,0);
+        IvrLog::Inst()->Log(buff, 0);
         switch (temp_resultCode) {
         case -1:
             RealeaseD3d(false);
