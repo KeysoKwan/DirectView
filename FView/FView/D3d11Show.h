@@ -36,12 +36,11 @@ class D3d11Show
     bool UpdateStereoEnabledStatus();
 
   private:
-  //  void RenderTexture();
     void RealeaseD3d(bool isClearhWnd = true);
     int InitD3D();
-    int SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type);
 
   public:
+    int TargetFrameRate = 30;
     bool isRendering;
     bool OnWindowsResized;
     int m_w;
@@ -52,20 +51,18 @@ class D3d11Show
     ID3D11Device2* m_sDevice;
     ID3D11DeviceContext2* m_deviceContext;
     IDXGISwapChain1* m_swapChain;
-  
+
     ID3D11VertexShader* solidColorVS_;
     ID3D11PixelShader* solidColorPS_;
     ID3D11InputLayout* inputLayout_;
     ID3D11SamplerState* colorMapSampler_;
 
-    
-
     //新增渲染类智能指针对象
-    std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
+    //std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
     //存下当前纹理指针，用于异常处理
     std::vector<void*> currentTexturePTR;
 
-    U3DColorSpace m_isGamaSpace;   
+    U3DColorSpace m_isGamaSpace;
     HWND m_ViewhWnd;
     HWND m_u3dhWnd;
 
@@ -84,12 +81,10 @@ class D3d11Show
     template <typename Res>
     inline void SafeRelease(Res* ptr)
     {
-        if (ptr != nullptr){
-            if(ptr != 0)
-                ptr->Release();
-            ptr = 0;
+        if (ptr != nullptr) {
+            ptr->Release();
+            ptr = nullptr;
         }
-       
     }
 };
 } // namespace dxshow

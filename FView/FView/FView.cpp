@@ -63,10 +63,10 @@ _VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
 ///<param name="stereoEnable">投屏窗口是否开启帧连续3D</param>
 ///<param name="newWidth">新的窗口宽度</param>
 ///<param name="newHeight">新的窗口高度</param>
-_VSAPI_ int fmAROnWindowResized(bool stereoEnable,int newWidth,int newHeight)
+_VSAPI_ int fmAROnWindowResized(bool stereoEnable, int newWidth, int newHeight)
 {
     //如果不在我们自己的机器上,那么就直接返回
-   /* if (MCDevice::GetInst()->ReadID() == 0) {
+    /* if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }*/
 
@@ -90,7 +90,7 @@ _VSAPI_ int fmAROnWindowResized(bool stereoEnable,int newWidth,int newHeight)
 _VSAPI_ int fmARSwitchProjector(int type)
 {
     //如果不在我们自己的机器上,那么就直接返回
-   /* if (MCDevice::GetInst()->ReadID() == 0) {
+    /* if (MCDevice::GetInst()->ReadID() == 0) {
         return -1;
     }*/
     //传两张纹理指针的左右3D投屏下，可切换到只显示左画面到投屏窗口或左右一起显示
@@ -98,7 +98,7 @@ _VSAPI_ int fmARSwitchProjector(int type)
     // |  L |  R |  or   |   L   |
     // -----------       ---------
     //如果只传了一张纹理指针，则此函数无效
-    type = type % 2;
+    type = type % 3;
     m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::OrthoMatrixType)type);
     return 1;
 }
@@ -106,7 +106,7 @@ _VSAPI_ int fmARSwitchProjector(int type)
 _VSAPI_ void fmARIsGamaSpace(int space)
 {
     //如果不在我们自己的机器上,那么就直接返回
-   /* if (MCDevice::GetInst()->ReadID() == 0) {
+    /* if (MCDevice::GetInst()->ReadID() == 0) {
         return;
     }*/
     //切换Gama与Linner色彩空间
@@ -114,10 +114,21 @@ _VSAPI_ void fmARIsGamaSpace(int space)
     m_d3d11show.SetGamaSpace((dxshow::D3d11Show::U3DColorSpace)space);
 }
 
+///设置程序目标帧数，最高不会超过屏幕刷新率
+_VSAPI_ void fmARSetFramerate(int frameRate)
+{
+    //如果不在我们自己的机器上,那么就直接返回
+    /* if (MCDevice::GetInst()->ReadID() == 0) {
+        return;
+    }*/
+
+    m_d3d11show.TargetFrameRate = frameRate;
+}
+
 _VSAPI_ void fmARStopView()
 {
     //如果不在我们自己的机器上,那么就直接返回
-  /*  if (MCDevice::GetInst()->ReadID() == 0) {
+    /*  if (MCDevice::GetInst()->ReadID() == 0) {
         return;
     }*/
     //安全退出线程并关闭渲染窗口

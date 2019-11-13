@@ -164,6 +164,8 @@ int D3d11Show::InitD3D()
     fullScreenDesc.RefreshRate.Denominator = 1;
     fullScreenDesc.Windowed = TRUE;
 
+    m_deviceContext->ClearState();
+    m_deviceContext->Flush();
     //hr = dxgiFactory->CreateSwapChain(m_sDevice, &sd, &m_swapChain);
     hr = dxgiFactory->CreateSwapChainForHwnd(dxgiDevice, m_ViewhWnd, &swapChainDesc, &fullScreenDesc, nullptr, &m_swapChain);
     if (FAILED(hr)) {
@@ -272,7 +274,6 @@ int D3d11Show::InitD3D()
         return InitD3D();
     }
     m_isInit = true;
-    m_drawer.reset(new DrawerManagerU3D(m_sDevice, m_swapChain));
 
     m_deviceContext->IASetInputLayout(inputLayout_);         //设置顶点格式
     m_deviceContext->VSSetShader(solidColorVS_, 0, 0);       //设置顶点着色器
@@ -300,6 +301,12 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
     SafeRelease(inputLayout_);
     //SafeRelease(m_renderTargetView);
     SafeRelease(m_swapChain);
+
+    //获取一次Viewports防止m_deviceContext为nullptr
+    UINT NumViewport = 0;
+    D3D11_VIEWPORT pViewports;
+    m_deviceContext->RSGetViewports(&NumViewport, &pViewports);
+
     SafeRelease(m_deviceContext);
     SafeRelease(m_sDevice);
 
@@ -308,11 +315,6 @@ void D3d11Show::RealeaseD3d(bool isClearhWnd)
     }
     m_isInit = false;
 }
-
-//void D3d11Show::RenderTexture()
-//{
-//
-//}
 
 void D3d11Show::EndRendering()
 {
@@ -326,35 +328,15 @@ void D3d11Show::EndRendering()
     RealeaseD3d(false);
 }
 
-int D3d11Show::SetupTextureHandle(void* textureHandle, RenderingResources::ResourceViewport type)
-{
-    if (m_sDevice == NULL || textureHandle == 0)
-        return -1;
-
-    if (m_failedTime > 20) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "SetupTextureHandle(...) failed more than 20 ,returning ... ");
-        IvrLog::Inst()->Log(std::string(charBuf), 4);
-        return -2;
-    }
-
-    RenderingResources rs = RenderingResources(m_sDevice, (ID3D11Texture2D*)textureHandle, type);
-    if (!rs.isValuable) {
-        m_failedTime++;
-        return SetupTextureHandle(textureHandle, type);
-    }
-    m_drawer->PushResources(std::move(rs));
-    m_failedTime = 0;
-    return 1;
-}
-
 void D3d11Show::SwichProjector(DrawerManagerU3D::OrthoMatrixType type)
 {
-    //立体渲染下不允许切换左右视图
-    if (m_OrthoMatrixType != DrawerManagerU3D::OrthoMatrixType::T_Stereopic) {
-        m_OrthoMatrixType = type;
-        m_MatrixModifyFlag = true;
-    }
+    m_OrthoMatrixType = type;
+    m_MatrixModifyFlag = true;
+    ////立体渲染下不允许切换左右视图
+    //if (m_OrthoMatrixType != DrawerManagerU3D::OrthoMatrixType::T_Stereopic) {
+    //    m_OrthoMatrixType = type;
+    //    m_MatrixModifyFlag = true;
+    //}
 }
 
 void D3d11Show::SetGamaSpace(U3DColorSpace space)
@@ -365,7 +347,7 @@ void D3d11Show::SetGamaSpace(U3DColorSpace space)
 bool D3d11Show::UpdateStereoEnabledStatus()
 {
     if (!m_isInit) {
-        IvrLog::Inst()->Log(std::string("UpdateStereoEnabledStatus():QueryInterface(...) failed with error = not init"), 4);
+        IvrLog::Inst()->Log(std::string("UpdateStereoEnabledStatus() failed with error = not init"), 4);
         return false;
     }
 
@@ -408,7 +390,7 @@ bool D3d11Show::UpdateStereoEnabledStatus()
 int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 {
     if (!Rlock(&m_mutex).LockSuccessed()) {
-        IvrLog::Inst()->Log("StartRenderingView called,but mutex is lock", 0);
+        IvrLog::Inst()->Log("StartRenderingView called,but some other is rendering", 1);
         return 0;
     }
     IvrLog::Inst()->Log("StartRenderingView called", 0);
@@ -449,13 +431,10 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     }
 
     if (hWnd != m_ViewhWnd) {
-        if (m_drawer != nullptr) m_drawer.reset();
         RealeaseD3d(false);
     }
 
     m_ViewhWnd = hWnd;
-    //m_w = w;
-    //m_h = h;
 
     currentTexturePTR.clear();
     va_list arg_ptr;
@@ -473,98 +452,106 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
     if (InitD3D() < 0) {
         return -3;
     }
-    m_drawer->ClearResources();
-    for (int i = 0; i < count; i++) {
-        if (count == 1) {
-            if (SetupTextureHandle(currentTexturePTR[i], RenderingResources::ResourceViewport::FULL_VIEW) < 0) {
-                IvrLog::Inst()->Log("StartRenderingView(...) failed with error = SetupTextureHandle Failed", 4);
-                return -4;
-            }
-        }
-        else {
-            if (SetupTextureHandle(currentTexturePTR[i], (RenderingResources::ResourceViewport)(i + 1)) < 0) {
-                IvrLog::Inst()->Log("StartRenderingView(...) failed with error = SetupTextureHandle Failed", 4);
-                return -4;
-            }
-        }
-    }
     va_end(arg_ptr);
     m_MatrixModifyFlag = true;
 
     auto lambdaRenderThread = [&]() {
         IvrLog::Inst()->Log("Render begin!", 0);
         int temp_resultCode = 0;
-        isRendering = true;
-        const int constFps = 60;
-        while (isRendering) {
-            std::this_thread::yield();
-            if (!IsWindow(m_ViewhWnd)) {
-                EndRendering();
+        ///Rendering loop
+        {
+            std::unique_ptr<DrawerManagerU3D> m_drawer(new DrawerManagerU3D(m_sDevice, m_swapChain)); //local value
+            isRendering = true;
+            for (int i = 0; i < currentTexturePTR.size(); i++) {
+                if (currentTexturePTR.size() == 1) {
+                    RenderingResources rs = RenderingResources(m_sDevice, (ID3D11Texture2D*)currentTexturePTR[i], RenderingResources::ResourceViewport::FULL_VIEW);
+                    if (!rs.isValuable) { //setup RenderingResources failed
+                        m_failedTime++;
+                        isRendering = false;
+                        temp_resultCode = -1;
+                        OnWindowsResized = true;
+                    }
+                    else //setup RenderingResources successed
+                        m_drawer->PushResources(std::move(rs));
+                }
+                else {
+                    RenderingResources rs = RenderingResources(m_sDevice, (ID3D11Texture2D*)currentTexturePTR[i], (RenderingResources::ResourceViewport)(i + 1));
+                    if (!rs.isValuable) { //setup RenderingResources failed
+                        m_failedTime++;
+                        isRendering = false;
+                        temp_resultCode = -1;
+                        OnWindowsResized = true;
+                    }
+                    else //setup RenderingResources successed
+                        m_drawer->PushResources(std::move(rs));
+                }
             }
-            float timeInOneFps = 1000.0f / constFps;
-            DWORD timeBegin = GetTickCount();
-            if (!IsIconic(m_ViewhWnd)) {
-                if (m_MatrixModifyFlag) {
-                    m_drawer->UpdateAllMatrix(m_OrthoMatrixType);
-                    m_MatrixModifyFlag = false;
+            while (isRendering) {
+                std::this_thread::yield();
+                if (!IsWindow(m_ViewhWnd)) {
+                    EndRendering();
                 }
-                if (m_sDevice == nullptr) {
-                    isRendering = false;
-                    temp_resultCode = -1;
-                    return -1;
-                }
-                if (OnWindowsResized) {
-                    if (m_stereoEnabled) {
-                        m_stereoEnabled = UpdateStereoEnabledStatus();
+                float timeInOneFps = 1000.0f / TargetFrameRate;
+                DWORD timeBegin = GetTickCount();
+                if (!IsIconic(m_ViewhWnd)) {
+                    if (m_MatrixModifyFlag) {
+                        m_drawer->UpdateAllMatrix(m_OrthoMatrixType);
+                        m_MatrixModifyFlag = false;
+                    }
+                    if (m_sDevice == nullptr) {
+                        isRendering = false;
+                        temp_resultCode = -1;
+                        return -1;
+                    }
+                    if (OnWindowsResized) {
+                        if (m_stereoEnabled) {
+                            m_stereoEnabled = UpdateStereoEnabledStatus();
+                            char buff[64] = {};
+                            sprintf_s(buff, "lambdaRenderThread: stereoEnabled = %d", m_stereoEnabled);
+                            IvrLog::Inst()->Log(buff, 0);
+                        }
+                        m_drawer->UpdateRenderingDependent(m_stereoEnabled);
+                        D3D11_VIEWPORT vp = {0};
+                        vp.TopLeftX = 0.f;
+                        vp.TopLeftY = 0.f;
+                        vp.Width = static_cast<float>(m_w);
+                        vp.Height = static_cast<float>(m_h);
+                        vp.MinDepth = 0.f;
+                        vp.MaxDepth = 1.f;
+                        m_deviceContext->RSSetViewports(1, &vp);
+                        OnWindowsResized = false;
                         char buff[64] = {};
-                        sprintf_s(buff, "lambdaRenderThread: stereoEnabled = %d", m_stereoEnabled);
+                        sprintf_s(buff, "lambdaRenderThread: vp.Width = %d  ,vp.Height = %d", m_w, m_h);
                         IvrLog::Inst()->Log(buff, 0);
                     }
-                    m_drawer->UpdateRenderingDependent(m_stereoEnabled);
-                    D3D11_VIEWPORT vp = {0};
-                    vp.TopLeftX = 0.f;
-                    vp.TopLeftY = 0.f;
-                    vp.Width = static_cast<float>(m_w);
-                    vp.Height = static_cast<float>(m_h);
-                    vp.MinDepth = 0.f;
-                    vp.MaxDepth = 1.f;
-                    m_deviceContext->RSSetViewports(1, &vp);
-                    OnWindowsResized = false;
-                    char buff[64] = {};
-                    sprintf_s(buff, "lambdaRenderThread: vp.Width = %d  ,vp.Height = %d", m_w, m_h);
-                    IvrLog::Inst()->Log(buff, 0);
-                }
-                // ID3D11DeviceContext* ctx = NULL;
-                // m_sDevice->GetImmediateContext(&ctx);
-                m_drawer->RenderAllResource(m_deviceContext); //渲染所有物体
+                    m_drawer->RenderAllResource(m_deviceContext); //渲染所有物体
 
-                DXGI_PRESENT_PARAMETERS parameters = {0};
-                parameters.DirtyRectsCount = 0;
-                parameters.pDirtyRects = nullptr;
-                parameters.pScrollRect = nullptr;
-                parameters.pScrollOffset = nullptr;
-                // The first argument instructs DXGI to block until VSync, putting the application
-                // to sleep until the next VSync. This ensures we don't waste any cycles rendering
-                // frames that will never be displayed to the screen.
-                HRESULT hr = m_swapChain->Present1(1, 0, &parameters);
-                // HRESULT hr = m_swapChain->Present(1, 0);
-
-                if (FAILED(hr)) {
-                    if (GetTickCount() - lastFailedTick < 1000.0f) {
-                        IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!", 3);
+                    DXGI_PRESENT_PARAMETERS parameters = {0};
+                    parameters.DirtyRectsCount = 0;
+                    parameters.pDirtyRects = nullptr;
+                    parameters.pScrollRect = nullptr;
+                    parameters.pScrollOffset = nullptr;
+                    // The first argument instructs DXGI to block until VSync, putting the application
+                    // to sleep until the next VSync. This ensures we don't waste any cycles rendering
+                    // frames that will never be displayed to the screen.
+                    HRESULT hr = m_swapChain->Present1(1, 0, &parameters);
+                    if (FAILED(hr)) {
+                        if (GetTickCount() - lastFailedTick < 1000.0f) {
+                            IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!", 3);
+                        }
+                        lastFailedTick = GetTickCount();
+                        isRendering = false;
+                        char buff[64] = {};
+                        sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
+                        IvrLog::Inst()->Log(buff, 4);
+                        temp_resultCode = -1;
+                        OnWindowsResized = true;
                     }
-                    lastFailedTick = GetTickCount();
-                    isRendering = false;
-                    char buff[64] = {};
-                    sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
-                    IvrLog::Inst()->Log(buff, 4);
-                    isRendering = false;
-                    temp_resultCode = -1;
                 }
+                DWORD timeTotal = GetTickCount() - timeBegin;
+                if (timeTotal < timeInOneFps)
+                    Sleep(DWORD(timeInOneFps - timeTotal));
             }
-            DWORD timeTotal = GetTickCount() - timeBegin;
-            if (timeTotal < timeInOneFps)
-                Sleep(DWORD(timeInOneFps - timeTotal));
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
         char buff[64] = {};

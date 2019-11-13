@@ -65,8 +65,7 @@ class DrawerManager
     inline void SafeRelease(Res* ptr)
     {
         if (ptr != nullptr) {
-            if (ptr != 0)
-                ptr->Release();
+            ptr->Release();
             ptr = nullptr;
         }
     }
@@ -118,6 +117,7 @@ DrawerManager<Resource>::~DrawerManager()
     SafeRelease(m_renderTargetView);
     SafeRelease(m_renderTargetViewRight);
     SafeRelease(m_d3dDepthStencilView);
+    IvrLog::Inst()->Log(std::string("~DrawerManager()"), 0);
 }
 
 template <typename Resource>
@@ -189,12 +189,12 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
 
             //渲染左眼图像
             ctx->OMSetRenderTargets(1, &m_renderTargetView, 0);
-            float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};            
-            ctx->ClearRenderTargetView(m_renderTargetView, clearColor); 
+            float clearColor[4] = {0.0f, 0.0f, 0.25f, 1.0f};
+            ctx->ClearRenderTargetView(m_renderTargetView, clearColor);
             m_resourcesStarck[0].Render(ctx, 6);
             //渲染右眼图像
             ctx->OMSetRenderTargets(1, &m_renderTargetViewRight, 0);
-            ctx->ClearRenderTargetView(m_renderTargetViewRight, clearColor);                                                         
+            ctx->ClearRenderTargetView(m_renderTargetViewRight, clearColor);
             m_resourcesStarck[1].Render(ctx, 6);
             ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
         }
