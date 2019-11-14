@@ -16,9 +16,9 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          solidColorPS_(NULL),
                          inputLayout_(NULL),
                          colorMapSampler_(NULL),
-                         m_stereoEnabled(false),
+                         m_stereoEnabled(true),
                          isRendering(false),
-                         OnWindowsResized(false),
+                         OnWindowsResized(true),
                          m_ViewhWnd(NULL),
                          m_isGamaSpace(U3DColorSpace::Gama),
                          m_w(0),
@@ -110,31 +110,13 @@ int D3d11Show::InitD3D()
     context->QueryInterface(__uuidof(ID3D11DeviceContext2), (void**)(&m_deviceContext));
     device->Release();
     context->Release();
-    //m_sDevice
+
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
     m_sDevice->CheckMultisampleQualityLevels(
         DXGI_FORMAT_R8G8B8A8_UNORM,
         4,
         &m4xMsaaQuality);
-    //准备交换链属性
-    /* DXGI_SWAP_CHAIN_DESC sd = {0};
-    sd.BufferDesc.Width = m_w;
-    sd.BufferDesc.Height = m_h;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-    sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-
-    sd.SampleDesc.Count = 4;
-    sd.SampleDesc.Quality = m4xMsaaQuality - 1;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.BufferCount = 1;
-    sd.OutputWindow = m_ViewhWnd;
-    sd.Windowed = true;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    sd.Flags = 0;*/
 
     // Allocate a descriptor.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
@@ -180,24 +162,6 @@ int D3d11Show::InitD3D()
     dxgiFactory->Release();
     dxgiAdapter->Release();
     dxgiDevice->Release();
-
-    //  m_renderTargetSize.Width = static_cast<float>(backBufferDesc.Width);
-    //   m_renderTargetSize.Height = static_cast<float>(backBufferDesc.Height);
-
-    // 将视图绑定到输出合并器阶段
-    // m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, 0);
-    /*if (backBuffer)
-        backBuffer->Release();*/
-    // 设置视口
-    /*D3D11_VIEWPORT vp = {0};
-    vp.TopLeftX = 0.f;
-    vp.TopLeftY = 0.f;
-    vp.Width = static_cast<float>(m_w);
-    vp.Height = static_cast<float>(m_h);
-    vp.MinDepth = 0.f;
-    vp.MaxDepth = 1.f;
-
-    m_deviceContext->RSSetViewports(1, &vp);*/
 
     // shaders
     hr = m_sDevice->CreateVertexShader(g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), nullptr, &solidColorVS_);
@@ -332,6 +296,7 @@ void D3d11Show::SwichProjector(DrawerManagerU3D::OrthoMatrixType type)
 {
     m_OrthoMatrixType = type;
     m_MatrixModifyFlag = true;
+
     ////立体渲染下不允许切换左右视图
     //if (m_OrthoMatrixType != DrawerManagerU3D::OrthoMatrixType::T_Stereopic) {
     //    m_OrthoMatrixType = type;
@@ -462,6 +427,20 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         {
             std::unique_ptr<DrawerManagerU3D> m_drawer(new DrawerManagerU3D(m_sDevice, m_swapChain)); //local value
             isRendering = true;
+
+            HANDLE resizedSignal = CreateEvent(NULL, FALSE, FALSE, L"FARwinResizeSignal");
+            ///wait for windows resize signal
+            auto SignalThread = [&]() {
+                while (isRendering) {
+                    WaitForSingleObject(resizedSignal, INFINITE);
+                    {
+                        OnWindowsResized = true;
+                    }
+                }
+            };
+            std::thread readSignalThread = std::thread(SignalThread);
+            readSignalThread.detach();
+            ///init texture handle
             for (int i = 0; i < currentTexturePTR.size(); i++) {
                 if (currentTexturePTR.size() == 1) {
                     RenderingResources rs = RenderingResources(m_sDevice, (ID3D11Texture2D*)currentTexturePTR[i], RenderingResources::ResourceViewport::FULL_VIEW);
@@ -504,25 +483,33 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         return -1;
                     }
                     if (OnWindowsResized) {
+                        RECT rect;
+                        GetWindowRect(m_ViewhWnd, &rect);
+                        m_w = rect.right - rect.left;
+                        m_h = rect.bottom - rect.top;
                         if (m_stereoEnabled) {
                             m_stereoEnabled = UpdateStereoEnabledStatus();
-                            char buff[64] = {};
-                            sprintf_s(buff, "lambdaRenderThread: stereoEnabled = %d", m_stereoEnabled);
-                            IvrLog::Inst()->Log(buff, 0);
+                            if (!m_stereoEnabled) {
+                                char buff[64] = {};
+                                sprintf_s(buff, "Stereopic is diable in current hardware : stereoEnabled = %d", m_stereoEnabled);
+                                IvrLog::Inst()->Log(buff, 0);
+                            }
                         }
-                        m_drawer->UpdateRenderingDependent(m_stereoEnabled);
+                        m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+                        if (m_drawer->UpdateRenderingDependent(m_stereoEnabled) < 0) {
+                            temp_resultCode = -1;
+                            OnWindowsResized = true;
+                        }
                         D3D11_VIEWPORT vp = {0};
                         vp.TopLeftX = 0.f;
                         vp.TopLeftY = 0.f;
+
                         vp.Width = static_cast<float>(m_w);
                         vp.Height = static_cast<float>(m_h);
                         vp.MinDepth = 0.f;
                         vp.MaxDepth = 1.f;
                         m_deviceContext->RSSetViewports(1, &vp);
                         OnWindowsResized = false;
-                        char buff[64] = {};
-                        sprintf_s(buff, "lambdaRenderThread: vp.Width = %d  ,vp.Height = %d", m_w, m_h);
-                        IvrLog::Inst()->Log(buff, 0);
                     }
                     m_drawer->RenderAllResource(m_deviceContext); //渲染所有物体
 
@@ -552,6 +539,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                 if (timeTotal < timeInOneFps)
                     Sleep(DWORD(timeInOneFps - timeTotal));
             }
+            SetEvent(resizedSignal);
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
         char buff[64] = {};

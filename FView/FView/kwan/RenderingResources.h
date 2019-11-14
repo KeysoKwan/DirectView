@@ -37,7 +37,7 @@ class RenderingResources
     {
         DirectX::XMMATRIX _world;
     };
-    bool updateFlag;
+    // bool updateFlag;
     ID3D11Device* m_device;
     ID3D11Buffer* m_vertexBuffer;
     ID3D11Texture2D* m_d3dtex;

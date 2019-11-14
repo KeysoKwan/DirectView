@@ -49,7 +49,6 @@ class DrawerManager
     ID3D11Device* m_d3dDevice;
     IDXGISwapChain1* m_d3dSwapchain;
     bool m_stereoEnable;
-    bool m_dirFlag;
 
     ID3D11RenderTargetView* m_renderTargetView;
     ID3D11RenderTargetView* m_renderTargetViewRight;
@@ -85,7 +84,6 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
                                                                         m_renderTargetViewRight(nullptr),
                                                                         m_d3dDepthStencilView(nullptr),
                                                                         m_stereoEnable(false),
-                                                                        m_dirFlag(false),
                                                                         m_orthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D)
 {
     using namespace DirectX;
@@ -181,10 +179,8 @@ void DrawerManager<Resource>::RenderAllResource(ID3D11DeviceContext* ctx)
             ctx->VSSetConstantBuffers(1, 1, &m_projectBuffer);
         }
         else if (m_stereoEnable && m_resourcesStarck.size() == 2) {
-            if (m_renderTargetViewRight == nullptr || !m_dirFlag) {
+            if (m_renderTargetViewRight == nullptr) {
                 UpdateRenderingDependent(m_stereoEnable);
-                UpdateAllMatrix(OrthoMatrixType::T_Stereopic);
-                m_dirFlag = true;
             }
 
             //渲染左眼图像
@@ -207,6 +203,12 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
     using namespace DirectX;
     /* if (type == m_orthoMatrixType)
         return;*/
+
+    char charBuf[128];
+    char temp_MatrixTypeDescript[3][15] = { {"2D"},{"3D_leftright"},{"Stereopic"} };
+    sprintf_s(charBuf, 128, "UpdateAllMatrix( %s )  m_resourcesSize = %zd ", temp_MatrixTypeDescript[(int)type], m_resourcesStarck.size());
+    IvrLog::Inst()->Log(std::string(charBuf), 0);
+
     if (m_resourcesStarck.size() == 0)
         return;
 
@@ -272,11 +274,19 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
 template <typename Resource>
 inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
 {
-    IvrLog::Inst()->Log(std::string("UpdateRenderingDependent"), 0);
     m_stereoEnable = isStereoipic;
     SafeRelease(m_renderTargetView);
     SafeRelease(m_renderTargetViewRight);
     SafeRelease(m_d3dDepthStencilView);
+    HRESULT hr = m_d3dSwapchain->ResizeBuffers(2, 0, 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+    if (FAILED(hr))
+    {
+        char buff[64] = {};
+        sprintf_s(buff, "m_swapChain->ResizeBuffers(...) failed with error 0x%08X", hr);
+        IvrLog::Inst()->Log(buff, 4);
+        return -1;
+    }
+  
     //创建渲染目标视图
     ID3D11Texture2D* backBuffer(NULL);
     CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc(
@@ -286,7 +296,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
         0,
         1);
     m_d3dSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
-    HRESULT hr = m_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
+    hr = m_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
     if (FAILED(hr)) {
         // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
         char charBuf[512];
