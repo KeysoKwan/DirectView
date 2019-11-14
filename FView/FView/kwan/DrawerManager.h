@@ -99,7 +99,6 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
     commandDesc.CPUAccessFlags = 0;
     HRESULT hr = m_d3dDevice->CreateBuffer(&commandDesc, NULL, &m_projectBuffer);
     if (FAILED(hr)) {
-        /*MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);*/
         char charBuf[512];
         sprintf_s(charBuf, 512, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
@@ -281,7 +280,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
     HRESULT hr = m_d3dSwapchain->ResizeBuffers(2, 0, 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
     if (FAILED(hr))
     {
-        char buff[64] = {};
+        char buff[128] = {};
         sprintf_s(buff, "m_swapChain->ResizeBuffers(...) failed with error 0x%08X", hr);
         IvrLog::Inst()->Log(buff, 4);
         return -1;

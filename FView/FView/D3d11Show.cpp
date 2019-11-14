@@ -460,6 +460,9 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         isRendering = false;
                         temp_resultCode = -1;
                         OnWindowsResized = true;
+                        char buff[128] = {};
+                        sprintf_s(buff, "Setup RenderingResources failed.");
+                        IvrLog::Inst()->Log(buff, 4);
                     }
                     else //setup RenderingResources successed
                         m_drawer->PushResources(std::move(rs));
@@ -490,9 +493,9 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         if (m_stereoEnabled) {
                             m_stereoEnabled = UpdateStereoEnabledStatus();
                             if (!m_stereoEnabled) {
-                                char buff[64] = {};
-                                sprintf_s(buff, "Stereopic is diable in current hardware : stereoEnabled = %d", m_stereoEnabled);
-                                IvrLog::Inst()->Log(buff, 0);
+                                char buff[128] = {};
+                                sprintf_s(buff, "Stereopic is diable in current hardware,falling back to normal swapchain.");
+                                IvrLog::Inst()->Log(buff, 3);
                             }
                         }
                         m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
@@ -528,7 +531,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         }
                         lastFailedTick = GetTickCount();
                         isRendering = false;
-                        char buff[64] = {};
+                        char buff[128] = {};
                         sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
                         IvrLog::Inst()->Log(buff, 4);
                         temp_resultCode = -1;
@@ -542,7 +545,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             SetEvent(resizedSignal);
         }
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
-        char buff[64] = {};
+        char buff[128] = {};
         sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
         IvrLog::Inst()->Log(buff, 0);
         switch (temp_resultCode) {
