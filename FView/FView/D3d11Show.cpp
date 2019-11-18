@@ -494,7 +494,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                             m_stereoEnabled = UpdateStereoEnabledStatus();
                             if (!m_stereoEnabled) {
                                 char buff[128] = {};
-                                sprintf_s(buff, "Stereopic is diable in current hardware,falling back to normal swapchain.");
+                                sprintf_s(buff, "Stereopic is disable in current hardware,falling back to normal swapchain.");
                                 IvrLog::Inst()->Log(buff, 3);
                             }
                         }

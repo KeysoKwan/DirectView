@@ -223,29 +223,18 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
     else {
         switch (type) {
         case OrthoMatrixType::T_2D:
-            if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::LEFT_HALF) {
-                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
-            }
-            else if ((*m_resourcesStarck.begin()).GetResourceVieportType() == RenderingResources::ResourceViewport::RIGHT_HALF) {
-                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.5f, 0.0f, -1.0, 1.0f), XMVectorSet(0.5f, 0.0f, 1.0, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));
-            }
-            else {
-                m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
-                m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
-            }
-
+            m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(-0.5f, 0.0f, -1.0f, 1.0f), XMVectorSet(-0.5f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(1.0f, 2.0f, 0.1f, 5.0f));        
             for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
                 (*iter).UpdateMVPMatrix();
             }
             break;
         case OrthoMatrixType::T_3Dleftright:
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));
+            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
             for (iter = m_resourcesStarck.begin(); iter != m_resourcesStarck.end(); iter++) {
                 (*iter).UpdateMVPMatrix();
-            }
-            m_projectMatrix._ortho = XMMatrixTranspose(XMMatrixOrthographicLH(2.0f, 2.0f, 0.1f, 5.0f));
+            }           
             break;
         case OrthoMatrixType::T_Stereopic:
             m_projectMatrix._view = XMMatrixTranspose(XMMatrixLookAtLH(XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f), XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f), XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)));

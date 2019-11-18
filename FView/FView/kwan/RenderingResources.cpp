@@ -46,16 +46,6 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
             {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
             {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
         };
-    switch (m_vp) {
-    case ResourceViewport::FULL_VIEW:
-        break;
-    case ResourceViewport::LEFT_HALF:
-        break;
-    case ResourceViewport::RIGHT_HALF:
-        break;
-    default:
-        break;
-    }
     resourceData.pSysMem = vertices;
     HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
     if (FAILED(hr)) {
@@ -141,38 +131,6 @@ void RenderingResources::ResetToSteropicMatirx(ID3D11DeviceContext* ctx)
 
     m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
     ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
-    //IvrLog::Inst()->Log(std::string("RenderingResources::ResetToSteropicMatirx(...)"), 4);
-
-    SafeRelease(m_vertexBuffer);
-    D3D11_BUFFER_DESC vertexDesc;
-    ZeroMemory(&vertexDesc, sizeof(vertexDesc));
-    vertexDesc.Usage = D3D11_USAGE_DEFAULT;
-    vertexDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vertexDesc.ByteWidth = sizeof(VertexPos) * 6;
-
-    D3D11_SUBRESOURCE_DATA resourceData;
-    ZeroMemory(&resourceData, sizeof(resourceData));
-    VertexPos vertices[] =
-        {
-            {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
-            {XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT2(1.0f, 0.0f)},
-            {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
-
-            {XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f)},
-            {XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT2(0.0f, 1.0f)},
-            {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
-        };
-    resourceData.pSysMem = vertices;
-    // ctx->UpdateSubresource(m_vertexBuffer, 0, NULL, &resourceData, 0, 0);
-
-    HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
-    if (FAILED(hr)) {
-        MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
-        char charBuf[128];
-        sprintf_s(charBuf, 128, "ResetToSteropicMatirx:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
-        IvrLog::Inst()->Log(std::string(charBuf), 0);
-        return;
-    }
 }
 
 void RenderingResources::Render(ID3D11DeviceContext* ctx, UINT index) const

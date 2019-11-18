@@ -50,9 +50,8 @@ class RenderingResources
     inline void SafeRelease(Res* ptr)
     {
         if (ptr != nullptr) {
-            if (ptr != 0)
-                ptr->Release();
-            ptr = 0;
+            ptr->Release();
+            ptr = nullptr;
         }
     }
 };
