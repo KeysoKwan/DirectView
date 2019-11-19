@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <memory>
+#include "kwan/RenderAPI.h"
 #include "kwan/DrawerManager.h"
 #include "kwan/RenderingResources.h"
 #include "kwan/RLock.h"
@@ -12,28 +13,23 @@
 namespace dxshow {
 using DrawerManagerU3D = DrawerManager<RenderingResources>;
 
-class D3d11Show
+class D3d11Show : public RenderAPI
 {
   public:
     D3d11Show();
-    ~D3d11Show();
+    virtual ~D3d11Show();
 
   public:
-    enum class U3DColorSpace
-    {
-        Gama = 0,
-        Linear = 1
-    };
-    void EndRendering();
     ///输入
     ///HWND hWnd 窗口句柄
     ///int swapchainWidth 交换链路长度
     ///int swapchainHeight 交换链路宽度
     ///int count 缺省参数个数
-    int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
-    void SwichProjector(DrawerManagerU3D::OrthoMatrixType type);
-    void SetGamaSpace(U3DColorSpace space);
-    bool UpdateStereoEnabledStatus();
+    virtual int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
+    virtual void SwichProjector(OrthoMatrixType type);
+    virtual void SetGamaSpace(U3DColorSpace space);
+    virtual bool UpdateStereoEnabledStatus();
+    virtual void EndRendering();
 
   private:
     void RealeaseD3d(bool isClearhWnd = true);
@@ -43,9 +39,6 @@ class D3d11Show
     int TargetFrameRate = 30;
     bool isRendering;
     bool OnWindowsResized;
-    int m_w;
-    int m_h;
-    bool m_stereoEnabled;
 
   private:
     ID3D11Device2* m_sDevice;
@@ -66,6 +59,9 @@ class D3d11Show
     HWND m_ViewhWnd;
     HWND m_u3dhWnd;
 
+    int m_w;
+    int m_h;
+
     bool m_isInit;
     bool m_MatrixModifyFlag;
     //线程与线程安全对象
@@ -73,18 +69,10 @@ class D3d11Show
     HANDLE m_hSemaphore = NULL;
     const char* m_SemaphoreName = "D3D11SHOW_sem";
     std::mutex m_mutex;
-    DrawerManagerU3D::OrthoMatrixType m_OrthoMatrixType;
+
     DWORD lastFailedTick;
     size_t m_failedTime;
     std::thread m_rthread;
-    //安全释放资源
-    template <typename Res>
-    inline void SafeRelease(Res* ptr)
-    {
-        if (ptr != nullptr) {
-            ptr->Release();
-            ptr = nullptr;
-        }
-    }
+    
 };
 } // namespace dxshow

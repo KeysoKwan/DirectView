@@ -7,13 +7,59 @@
 #include "FView.h"
 #include "MCDevice.h"
 #include "./dto/FViewRT.h"
+#include "kwan/RenderAPI.h"
 #include "kwan/MonitorAdapter.h"
+#include "kwan/IUnityGraphics.h"
 
 using namespace dxlib;
 
 //全局对象
-dxshow::D3d11Show m_d3d11show;
+dxshow::RenderAPI* m_currentAPI = nullptr;
 dto::FViewRT fviewRT;
+
+static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
+static IUnityInterfaces* s_UnityInterfaces = NULL;
+static IUnityGraphics* s_Graphics = NULL;
+
+extern "C" void	UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginLoad(IUnityInterfaces* unityInterfaces)
+{
+    s_UnityInterfaces = unityInterfaces;
+    s_Graphics = s_UnityInterfaces->Get<IUnityGraphics>();
+    s_Graphics->RegisterDeviceEventCallback(OnGraphicsDeviceEvent);
+
+#if SUPPORT_VULKAN
+    if (s_Graphics->GetRenderer() == kUnityGfxRendererNull)
+    {
+        extern void RenderAPI_Vulkan_OnPluginLoad(IUnityInterfaces*);
+        RenderAPI_Vulkan_OnPluginLoad(unityInterfaces);
+    }
+#endif // SUPPORT_VULKAN
+
+    // Run OnGraphicsDeviceEvent(initialize) manually on plugin load
+    OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
+}
+
+static UnityGfxRenderer s_DeviceType = kUnityGfxRendererNull;
+
+static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType)
+{
+    // Create graphics API implementation upon initialization
+    if (eventType == kUnityGfxDeviceEventInitialize)
+    {
+        assert(m_currentAPI == nullptr);
+        s_DeviceType = s_Graphics->GetRenderer();
+        m_currentAPI = dxshow::CreateRenderAPI(s_DeviceType);
+       
+    }
+
+    // Cleanup graphics API implementation upon shutdown
+    if (eventType == kUnityGfxDeviceEventShutdown)
+    {
+        delete m_currentAPI;
+        s_DeviceType = kUnityGfxRendererNull;
+    }
+}
+
 
 /// <returns>
 ///  返回错误代码
@@ -32,9 +78,9 @@ _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTexture
     //    return -1;
     //}
     if (RightTextureHandle == NULL || RightTextureHandle == nullptr)
-        return m_d3d11show.StartRenderingView(hWnd, w, h, 1, textureHandle);
+        return m_currentAPI->StartRenderingView(hWnd, w, h, 1, textureHandle);
     else
-        return m_d3d11show.StartRenderingView(hWnd, w, h, 2, textureHandle, RightTextureHandle);
+        return m_currentAPI->StartRenderingView(hWnd, w, h, 2, textureHandle, RightTextureHandle);
 }
 
 //_VSAPI_ int fmARStartView_LRDX11(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
@@ -46,27 +92,6 @@ _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTexture
 //    return m_d3d11show.StartRenderingView(hWnd, w, h, 2, LeftTextureHandle, RightTextureHandle);
 //}
 
-_VSAPI_ int fmARStartViewDX12(HWND hWnd, void* textureHandle, int w, int h)
-{
-    //如果不在我们自己的机器上,那么就直接返回
-    if (MCDevice::GetInst()->ReadID() == 0) {
-        return -1;
-    }
-    //预留dx12的资源接收函数,后续再实现
-    //需要先将textureHandle转换为dx11资源
-    return -2;
-}
-
-//_VSAPI_ int fmARStartView_LRDX12(HWND hWnd, void* LeftTextureHandle, void* RightTextureHandle, int w, int h)
-//{
-//    //如果不在我们自己的机器上,那么就直接返回
-//    if (MCDevice::GetInst()->ReadID() == 0) {
-//        return -1;
-//    }
-//    //预留dx12的资源接收函数,后续再实现
-//    //需要先将textureHandle转换为dx11资源
-//    return -2;
-//}
 
 _VSAPI_ int fmARSwitchProjector(int type)
 {
@@ -80,7 +105,7 @@ _VSAPI_ int fmARSwitchProjector(int type)
     // -----------       ---------
     //如果只传了一张纹理指针，则此函数无效
     type = type % 3;
-    m_d3d11show.SwichProjector((dxshow::DrawerManagerU3D::OrthoMatrixType)type);
+    m_currentAPI->SwichProjector((dxshow::OrthoMatrixType)type);
     return 1;
 }
 
@@ -92,7 +117,7 @@ _VSAPI_ void fmARIsGamaSpace(int space)
     }*/
     //切换Gama与Linner色彩空间
     space %= 2;
-    m_d3d11show.SetGamaSpace((dxshow::D3d11Show::U3DColorSpace)space);
+    m_currentAPI->SetGamaSpace((dxshow::RenderAPI::U3DColorSpace)space);
 }
 
 _VSAPI_ bool fmARGetStereopicSupport()
@@ -102,7 +127,7 @@ _VSAPI_ bool fmARGetStereopicSupport()
         return;
     }*/
     //切换Gama与Linner色彩空间
-    return m_d3d11show.UpdateStereoEnabledStatus();
+    return m_currentAPI->UpdateStereoEnabledStatus();
 }
 
 ///设置程序目标帧数，最高不会超过屏幕刷新率
@@ -113,7 +138,7 @@ _VSAPI_ void fmARSetFramerate(int frameRate)
         return;
     }*/
 
-    m_d3d11show.TargetFrameRate = frameRate;
+    m_currentAPI->TargetFrameRate = frameRate;
 }
 
 _VSAPI_ void fmARStopView()
@@ -123,7 +148,7 @@ _VSAPI_ void fmARStopView()
         return;
     }*/
     //安全退出线程并关闭渲染窗口
-    m_d3d11show.EndRendering();
+    m_currentAPI->EndRendering();
 }
 
 // 通过EDID获取屏幕信息

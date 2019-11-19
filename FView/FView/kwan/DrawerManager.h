@@ -5,6 +5,7 @@
 #include <d3d11_2.h>
 #include <DirectXMath.h>
 #include "IVR_Log.h"
+#include "RenderAPI.h"
 
 namespace dxshow {
 //渲染管理类
@@ -12,12 +13,6 @@ template <typename Resource>
 class DrawerManager
 {
   public:
-    enum class OrthoMatrixType
-    {
-        T_2D = 0,
-        T_3Dleftright = 1,
-        T_Stereopic = 2
-    };
 
     DrawerManager<Resource>();
     DrawerManager<Resource>(ID3D11Device* d3dDevice, IDXGISwapChain1* d3dSwapchian);
@@ -84,7 +79,7 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
                                                                         m_renderTargetViewRight(nullptr),
                                                                         m_d3dDepthStencilView(nullptr),
                                                                         m_stereoEnable(false),
-                                                                        m_orthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D)
+                                                                        m_orthoMatrixType(OrthoMatrixType::T_2D)
 {
     using namespace DirectX;
 
@@ -99,8 +94,8 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
     commandDesc.CPUAccessFlags = 0;
     HRESULT hr = m_d3dDevice->CreateBuffer(&commandDesc, NULL, &m_projectBuffer);
     if (FAILED(hr)) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         return;
     }
@@ -287,8 +282,8 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
     hr = m_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
     if (FAILED(hr)) {
         // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
     }
 
@@ -304,8 +299,8 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
         hr = m_d3dDevice->CreateRenderTargetView(backBuffer, &renderTargetViewRightDesc, &m_renderTargetViewRight);
         if (FAILED(hr)) {
             // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
-            char charBuf[512];
-            sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
+            char charBuf[128];
+            sprintf_s(charBuf, 128, "UpdateRenderingDependent(...):CreateRenderTargetView(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf), 4);
         }
     }
@@ -343,8 +338,8 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
 
     if (FAILED(hr)) {
         // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "UpdateRenderingDependent(...):CreateDepthStencilView(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "UpdateRenderingDependent(...):CreateDepthStencilView(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
     }
     SafeRelease(depthStencil);

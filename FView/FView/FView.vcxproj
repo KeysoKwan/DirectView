@@ -178,6 +178,7 @@
     <ClInclude Include="kwan\RenderingResources.h" />
     <ClInclude Include="kwan\RLock.h" />
     <ClInclude Include="MCDevice.h" />
+    <ClInclude Include="kwan\RenderAPI.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="FView.h" />
     <ClInclude Include="stdafx.h" />
@@ -196,6 +197,7 @@
     <ClCompile Include="kwan\RenderingResources.cpp" />
     <ClCompile Include="kwan\RLock.cpp" />
     <ClCompile Include="MCDevice.cpp" />
+    <ClCompile Include="kwan\RenderAPI.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

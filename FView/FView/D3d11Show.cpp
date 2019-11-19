@@ -16,7 +16,6 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          solidColorPS_(NULL),
                          inputLayout_(NULL),
                          colorMapSampler_(NULL),
-                         m_stereoEnabled(true),
                          isRendering(false),
                          OnWindowsResized(true),
                          m_ViewhWnd(NULL),
@@ -24,11 +23,14 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          m_w(0),
                          m_h(0),
                          m_isInit(false),
-                         m_OrthoMatrixType(DrawerManagerU3D::OrthoMatrixType::T_2D),
                          m_MatrixModifyFlag(false),
                          lastFailedTick(0),
                          m_failedTime(0)
 {
+    char charBuf[128];
+    sprintf_s(charBuf, 128, "Current API is DirectX11 ... ");
+    IvrLog::Inst()->Log(std::string(charBuf), 0);
+
     std::vector<HWND> temp_vecHWnds;
     temp_vecHWnds.clear();
     GetHWndsByProcessID(GetCurrentProcessId(), temp_vecHWnds);
@@ -64,8 +66,8 @@ int D3d11Show::InitD3D()
         return 0;
     }
     if (m_failedTime > 20) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D() failed more than 20 ,returning ... ");
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "InitD3D() failed more than 20 ,returning ... ");
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         return -2;
     }
@@ -292,13 +294,13 @@ void D3d11Show::EndRendering()
     RealeaseD3d(false);
 }
 
-void D3d11Show::SwichProjector(DrawerManagerU3D::OrthoMatrixType type)
+void D3d11Show::SwichProjector(OrthoMatrixType type)
 {
     m_OrthoMatrixType = type;
     m_MatrixModifyFlag = true;
 
     ////立体渲染下不允许切换左右视图
-    //if (m_OrthoMatrixType != DrawerManagerU3D::OrthoMatrixType::T_Stereopic) {
+    //if (m_OrthoMatrixType != OrthoMatrixType::T_Stereopic) {
     //    m_OrthoMatrixType = type;
     //    m_MatrixModifyFlag = true;
     //}
