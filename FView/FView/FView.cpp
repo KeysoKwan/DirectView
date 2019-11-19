@@ -14,7 +14,7 @@
 using namespace dxlib;
 
 //全局对象
-dxshow::RenderAPI* m_currentAPI = nullptr;
+std::unique_ptr<dxshow::RenderAPI> m_currentAPI;
 dto::FViewRT fviewRT;
 
 static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType);
@@ -46,16 +46,13 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
     // Create graphics API implementation upon initialization
     if (eventType == kUnityGfxDeviceEventInitialize)
     {
-        assert(m_currentAPI == nullptr);
         s_DeviceType = s_Graphics->GetRenderer();
-        m_currentAPI = dxshow::CreateRenderAPI(s_DeviceType);
-       
+        m_currentAPI.reset(dxshow::CreateRenderAPI(s_DeviceType));      
     }
 
     // Cleanup graphics API implementation upon shutdown
     if (eventType == kUnityGfxDeviceEventShutdown)
     {
-        delete m_currentAPI;
         s_DeviceType = kUnityGfxRendererNull;
     }
 }

@@ -2,7 +2,8 @@
 #include "../D3d11Show.h"
 namespace dxshow {
 RenderAPI::RenderAPI() : m_stereoEnabled(true),
-                         m_OrthoMatrixType(OrthoMatrixType::T_2D)
+                         m_OrthoMatrixType(OrthoMatrixType::T_2D),
+                         m_isGamaSpace(U3DColorSpace::Gama)
 {
 }
 
@@ -18,6 +19,7 @@ void RenderAPI::SwichProjector(OrthoMatrixType type)
 }
 void RenderAPI::SetGamaSpace(U3DColorSpace space)
 {
+    m_isGamaSpace = space;
 }
 bool RenderAPI::UpdateStereoEnabledStatus()
 {

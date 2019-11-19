@@ -38,6 +38,7 @@ class RenderAPI
     int TargetFrameRate = 30;
 
   protected:
+    U3DColorSpace m_isGamaSpace;
     ///投影模式
     OrthoMatrixType m_OrthoMatrixType;
     ///安全释放资源

@@ -19,7 +19,6 @@ D3d11Show::D3d11Show() : m_sDevice(NULL),
                          isRendering(false),
                          OnWindowsResized(true),
                          m_ViewhWnd(NULL),
-                         m_isGamaSpace(U3DColorSpace::Gama),
                          m_w(0),
                          m_h(0),
                          m_isInit(false),
@@ -306,11 +305,6 @@ void D3d11Show::SwichProjector(OrthoMatrixType type)
     //}
 }
 
-void D3d11Show::SetGamaSpace(U3DColorSpace space)
-{
-    m_isGamaSpace = space;
-}
-
 bool D3d11Show::UpdateStereoEnabledStatus()
 {
     if (!m_isInit) {
@@ -322,16 +316,16 @@ bool D3d11Show::UpdateStereoEnabledStatus()
     HRESULT hr = m_sDevice->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgiDevice);
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():QueryInterface(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "UpdateStereoEnabledStatus():QueryInterface(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         return false;
     }
     IDXGIAdapter* dxgiAdapter;
     hr = dxgiDevice->GetAdapter(&dxgiAdapter);
     if (FAILED(hr)) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         SafeRelease(dxgiDevice);
         return false;
@@ -340,8 +334,8 @@ bool D3d11Show::UpdateStereoEnabledStatus()
     IDXGIFactory2* dxgiFactory;
     hr = dxgiAdapter->GetParent(IID_PPV_ARGS(&dxgiFactory));
     if (FAILED(hr)) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "UpdateStereoEnabledStatus():GetAdapter(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         SafeRelease(dxgiDevice);
         SafeRelease(dxgiAdapter);

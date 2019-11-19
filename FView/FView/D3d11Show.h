@@ -27,7 +27,6 @@ class D3d11Show : public RenderAPI
     ///int count 缺省参数个数
     virtual int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
     virtual void SwichProjector(OrthoMatrixType type);
-    virtual void SetGamaSpace(U3DColorSpace space);
     virtual bool UpdateStereoEnabledStatus();
     virtual void EndRendering();
 
@@ -36,7 +35,7 @@ class D3d11Show : public RenderAPI
     int InitD3D();
 
   public:
-    int TargetFrameRate = 30;
+
     bool isRendering;
     bool OnWindowsResized;
 
@@ -55,7 +54,7 @@ class D3d11Show : public RenderAPI
     //存下当前纹理指针，用于异常处理
     std::vector<void*> currentTexturePTR;
 
-    U3DColorSpace m_isGamaSpace;
+    
     HWND m_ViewhWnd;
     HWND m_u3dhWnd;
 
