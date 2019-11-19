@@ -7,6 +7,7 @@
 
 #define MAX_LOADSTRING 100
 #define WM_SWITCHWINDOWLONG (WM_USER+120)
+#define WM_U3D WM_USER + 10
 
 // 全局变量:
 HINSTANCE hInst;                                // 当前实例
@@ -123,10 +124,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 HANDLE hEvent;
-
+HWND g_hU3;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
+    if (message >= WM_MOUSEMOVE && message <= WM_RBUTTONDBLCLK)
+    {
+        if (g_hU3 != NULL)
+            PostMessage(g_hU3, message + 0x4000, (WPARAM)hWnd, lParam);
+    }
     switch (message)
     {
         //case WM_COMMAND:
@@ -146,8 +152,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         //        }
         //    }
         //    break;
+    case WM_U3D:
+        g_hU3 = (HWND)wParam;
+        break;
     case WM_SHOWWINDOW:
-
+        //SetWindowLong(hWnd, GWL_STYLE, WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP);
         LPWSTR *szArgList;
         int argCount;
         szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
