@@ -8,17 +8,17 @@
 #pragma comment(lib, "d3d11.lib")
 
 namespace dxshow {
-D3d11Show::D3d11Show() : m_sDevice(NULL),
-                         m_deviceContext(NULL),
-                         m_swapChain(NULL),
+D3d11Show::D3d11Show() : m_sDevice(nullptr),
+                         m_deviceContext(nullptr),
+                         m_swapChain(nullptr),
                          /*         m_renderTargetView(NULL),*/
-                         solidColorVS_(NULL),
-                         solidColorPS_(NULL),
-                         inputLayout_(NULL),
-                         colorMapSampler_(NULL),
+                         solidColorVS_(nullptr),
+                         solidColorPS_(nullptr),
+                         inputLayout_(nullptr),
+                         colorMapSampler_(nullptr),
                          isRendering(false),
                          OnWindowsResized(true),
-                         m_ViewhWnd(NULL),
+                         m_ViewhWnd(nullptr),
                          m_w(0),
                          m_h(0),
                          m_isInit(false),
@@ -100,8 +100,8 @@ int D3d11Show::InitD3D()
         &context);
 
     if (FAILED(hr)) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "InitD3D():D3D11CreateDevice(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
@@ -153,8 +153,8 @@ int D3d11Show::InitD3D()
     hr = dxgiFactory->CreateSwapChainForHwnd(dxgiDevice, m_ViewhWnd, &swapChainDesc, &fullScreenDesc, nullptr, &m_swapChain);
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "InitD3D():CreateSwapChain(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
@@ -167,8 +167,8 @@ int D3d11Show::InitD3D()
     // shaders
     hr = m_sDevice->CreateVertexShader(g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), nullptr, &solidColorVS_);
     if (FAILED(hr)) {
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "InitD3D():CreateVertexShader(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
@@ -178,8 +178,8 @@ int D3d11Show::InitD3D()
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShader, sizeof(g_Tex2DPixelShader), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
-            char charBuf[512];
-            sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
+            char charBuf[128];
+            sprintf_s(charBuf, 128, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
@@ -190,8 +190,8 @@ int D3d11Show::InitD3D()
         hr = m_sDevice->CreatePixelShader(g_Tex2DPixelShaderLinearSpace, sizeof(g_Tex2DPixelShaderLinearSpace), nullptr, &solidColorPS_);
         if (FAILED(hr)) {
             //MessageBox(NULL, L"创建像素着色器失败!", L"error", MB_OK);
-            char charBuf[512];
-            sprintf_s(charBuf, 512, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
+            char charBuf[128];
+            sprintf_s(charBuf, 128, "InitD3D():CreatePixelShader(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
@@ -209,8 +209,8 @@ int D3d11Show::InitD3D()
         hr = m_sDevice->CreateInputLayout(s_DX11InputElementDesc, 2, g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), &inputLayout_);
         if (FAILED(hr)) {
             //MessageBox(NULL, L"创建输入布局失败!", L"error", MB_OK);
-            char charBuf[512];
-            sprintf_s(charBuf, 512, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
+            char charBuf[128];
+            sprintf_s(charBuf, 128, "InitD3D():CreateInputLayout(...) failed with error %x", hr);
             IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
@@ -231,8 +231,8 @@ int D3d11Show::InitD3D()
 
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SamplerState failed!", L"error", MB_OK);
-        char charBuf[512];
-        sprintf_s(charBuf, 512, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "InitD3D():CreateSamplerState(...) failed with error %x", hr);
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;

@@ -41,8 +41,9 @@ class DrawerManager
         DirectX::XMMATRIX _view;
         DirectX::XMMATRIX _ortho;
     };
-    ID3D11Device* m_d3dDevice;
-    IDXGISwapChain1* m_d3dSwapchain;
+    //do not released ref_ value
+    ID3D11Device* ref_d3dDevice;
+    IDXGISwapChain1* ref_d3dSwapchain;
     bool m_stereoEnable;
 
     ID3D11RenderTargetView* m_renderTargetView;
@@ -73,8 +74,8 @@ DrawerManager<Resource>::DrawerManager()
 
 template <typename Resource>
 DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
-                                       IDXGISwapChain1* d3dSwapchain) : m_d3dDevice(d3dDevice),
-                                                                        m_d3dSwapchain(d3dSwapchain),
+                                       IDXGISwapChain1* d3dSwapchain) : ref_d3dDevice(d3dDevice),
+                                                                        ref_d3dSwapchain(d3dSwapchain),
                                                                         m_renderTargetView(nullptr),
                                                                         m_renderTargetViewRight(nullptr),
                                                                         m_d3dDepthStencilView(nullptr),
@@ -92,7 +93,7 @@ DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
     commandDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     commandDesc.ByteWidth = sizeof(ProjectBuffer);
     commandDesc.CPUAccessFlags = 0;
-    HRESULT hr = m_d3dDevice->CreateBuffer(&commandDesc, NULL, &m_projectBuffer);
+    HRESULT hr = ref_d3dDevice->CreateBuffer(&commandDesc, NULL, &m_projectBuffer);
     if (FAILED(hr)) {
         char charBuf[128];
         sprintf_s(charBuf, 128, "DrawerManager():CreateBuffer(m_projectBuffer) failed with error %x", hr);
@@ -208,7 +209,7 @@ void DrawerManager<Resource>::UpdateAllMatrix(OrthoMatrixType type)
 
     m_orthoMatrixType = type;
     ID3D11DeviceContext* ctx = NULL;
-    m_d3dDevice->GetImmediateContext(&ctx);
+    ref_d3dDevice->GetImmediateContext(&ctx);
     typename std::vector<Resource>::iterator iter;
     if (m_resourcesStarck.size() == 1) {
         //   MessageBox(NULL, L"m_resourcesStarck.size() == 1", L"error", MB_OK);
@@ -261,7 +262,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
     SafeRelease(m_renderTargetView);
     SafeRelease(m_renderTargetViewRight);
     SafeRelease(m_d3dDepthStencilView);
-    HRESULT hr = m_d3dSwapchain->ResizeBuffers(2, 0, 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+    HRESULT hr = ref_d3dSwapchain->ResizeBuffers(2, 0, 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
     if (FAILED(hr))
     {
         char buff[128] = {};
@@ -278,8 +279,8 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
         0,
         0,
         1);
-    m_d3dSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
-    hr = m_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
+    ref_d3dSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
+    hr = ref_d3dDevice->CreateRenderTargetView(backBuffer, 0, &m_renderTargetView);
     if (FAILED(hr)) {
         // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
         char charBuf[128];
@@ -296,7 +297,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
             0,
             1,
             1);
-        hr = m_d3dDevice->CreateRenderTargetView(backBuffer, &renderTargetViewRightDesc, &m_renderTargetViewRight);
+        hr = ref_d3dDevice->CreateRenderTargetView(backBuffer, &renderTargetViewRightDesc, &m_renderTargetViewRight);
         if (FAILED(hr)) {
             // MessageBox(NULL, L"Create RenderTargetView failed!", L"error", MB_OK);
             char charBuf[128];
@@ -321,7 +322,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
 
     // Allocate a 2-D surface as the depth/stencil buffer.
     ID3D11Texture2D* depthStencil;
-    m_d3dDevice->CreateTexture2D(
+    ref_d3dDevice->CreateTexture2D(
         &depthTexDesc,
         nullptr,
         &depthStencil);
@@ -331,7 +332,7 @@ inline int DrawerManager<Resource>::UpdateRenderingDependent(bool isStereoipic)
     descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     descDSV.Texture2D.MipSlice = 0;
 
-    hr = m_d3dDevice->CreateDepthStencilView(
+    hr = ref_d3dDevice->CreateDepthStencilView(
         depthStencil,
         &descDSV,
         &m_d3dDepthStencilView);

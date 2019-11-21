@@ -13,6 +13,9 @@
 HINSTANCE hInst;                                // 当前实例
 WCHAR szTitle[MAX_LOADSTRING];                  // 标题栏文本
 WCHAR szWindowClass[MAX_LOADSTRING];            // 主窗口类名
+HANDLE hEvent_onWindowResize;                   // 当窗口位置改变时事件
+HWND g_hU3;                                     // 接收到的u3d窗口
+bool temp_edge = false;                         // 窗口是否带边框，默认不带
 
 // 此代码模块中包含的函数的前向声明:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -123,8 +126,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 发送退出消息并返回
 //
 //
-HANDLE hEvent;
-HWND g_hU3;
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
@@ -135,23 +137,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     switch (message)
     {
-        //case WM_COMMAND:
-        //    {
-        //        int wmId = LOWORD(wParam);
-        //        // 分析菜单选择:
-        //        switch (wmId)
-        //        {
-        //        case IDM_ABOUT:
-        //            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-        //            break;
-        //        case IDM_EXIT:
-        //            DestroyWindow(hWnd);
-        //            break;
-        //        default:
-        //            return DefWindowProc(hWnd, message, wParam, lParam);
-        //        }
-        //    }
-        //    break;
     case WM_U3D:
         g_hU3 = (HWND)wParam;
         break;
@@ -162,16 +147,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
         if (szArgList == NULL)
         {
+            SetWindowLong(hWnd, GWL_STYLE, WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP);
             break;
         }
-
         for (int i = 0; i < argCount; i++)
         {
-            if (wcscmp(szArgList[i], L"-noedge") == 0)
+            if (wcscmp(szArgList[i], L"-withedge") == 0)
             {
-                SetWindowLong(hWnd, GWL_STYLE, WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP);
+                temp_edge = true;
             }
         }
+        if (!temp_edge)
+            SetWindowLong(hWnd, GWL_STYLE, WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP);
+
         LocalFree(szArgList);
         break;
     case WM_SWITCHWINDOWLONG:
@@ -179,9 +167,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_SIZE:
         //当窗口发生位置改变
-        hEvent = ::OpenEvent(EVENT_ALL_ACCESS, FALSE, L"FARwinResizeSignal");
-        if (hEvent)
-            SetEvent(hEvent);
+        hEvent_onWindowResize = ::OpenEvent(EVENT_ALL_ACCESS, FALSE, L"FARwinResizeSignal");
+        if (hEvent_onWindowResize)
+            SetEvent(hEvent_onWindowResize);
         break;
     case WM_MOVE:
         //当窗口被移动

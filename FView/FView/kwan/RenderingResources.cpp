@@ -5,7 +5,7 @@ RenderingResources::RenderingResources() : isValuable(false)
 {
 }
 
-RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(copy.m_device),
+RenderingResources::RenderingResources(RenderingResources&& copy) : ref_device(copy.ref_device),
                                                                     m_vertexBuffer(copy.m_vertexBuffer),
                                                                     m_d3dtex(copy.m_d3dtex),
                                                                     m_ResourceView(copy.m_ResourceView),
@@ -16,14 +16,14 @@ RenderingResources::RenderingResources(RenderingResources&& copy) : m_device(cop
                                                                     isValuable(copy.isValuable) /*,
                                                                     updateFlag(false)*/
 {
-    copy.m_device = 0;
+    copy.ref_device = 0;
     copy.m_vertexBuffer = 0;
     copy.m_d3dtex = 0;
     copy.m_ResourceView = 0;
     copy.m_MVPbuffer = 0;
 }
 
-RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : m_device(device), m_d3dtex(d3dtex), m_vp(vp) /*, updateFlag(false)*/
+RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : ref_device(device), m_d3dtex(d3dtex), m_vp(vp) /*, updateFlag(false)*/
 {
     using namespace DirectX;
     //m_device = device;
@@ -47,7 +47,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
             {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
         };
     resourceData.pSysMem = vertices;
-    HRESULT hr = m_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
+    HRESULT hr = ref_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
     if (FAILED(hr)) {
         char charBuf[128];
         sprintf_s(charBuf, 128, "RenderingResources:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
@@ -61,7 +61,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     vdesc.Texture2D.MostDetailedMip = 0;
     vdesc.Texture2D.MipLevels = 1;
 
-    hr = m_device->CreateShaderResourceView(m_d3dtex, &vdesc, &m_ResourceView);
+    hr = ref_device->CreateShaderResourceView(m_d3dtex, &vdesc, &m_ResourceView);
     if (FAILED(hr)) {
         //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
         char charBuf[128];
@@ -77,7 +77,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     commandDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     commandDesc.ByteWidth = sizeof(CommandBuffer);
     commandDesc.CPUAccessFlags = 0;
-    hr = m_device->CreateBuffer(&commandDesc, NULL, &m_MVPbuffer);
+    hr = ref_device->CreateBuffer(&commandDesc, NULL, &m_MVPbuffer);
 
     if (FAILED(hr)) {
         //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
@@ -103,7 +103,7 @@ void RenderingResources::UpdateMVPMatrix()
     if (!isValuable) return;
     using namespace DirectX;
     ID3D11DeviceContext* ctx = NULL;
-    m_device->GetImmediateContext(&ctx);
+    ref_device->GetImmediateContext(&ctx);
 
     switch (m_vp) {
     case ResourceViewport::FULL_VIEW:
