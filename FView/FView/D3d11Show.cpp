@@ -249,11 +249,15 @@ int D3d11Show::InitD3D()
 void D3d11Show::RealeaseD3d(bool isClearhWnd)
 {
     if (!m_isInit) return;
-    isRendering = false;
-    //等待渲染线程返回
-    WaitForSingleObject(m_hSemaphore, 300);
-    ReleaseSemaphore(m_hSemaphore, 1, NULL);
-    m_hSemaphore = NULL;
+    
+    if (isRendering)
+    {
+        //等待渲染线程返回
+        WaitForSingleObject(m_hSemaphore, 300);
+        ReleaseSemaphore(m_hSemaphore, 1, NULL);
+        isRendering = false;
+    }
+    
 
     colorMapSampler_ = nullptr;
     solidColorVS_ = nullptr;
@@ -544,8 +548,6 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         temp_resultCode = -1;
                         OnWindowsResized = true;
                     }
-                    isRendering = false;
-                    temp_resultCode = -1;
                 }
                 DWORD timeTotal = GetTickCount() - timeBegin;
                 if (timeTotal < timeInOneFps)
@@ -553,13 +555,14 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             }
             SetEvent(resizedSignal);
         }
-        ReleaseSemaphore(m_hSemaphore, 1, NULL);
+        //m_rthread.join();        
         char buff[128] = {};
         sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
         IvrLog::Inst()->Log(buff, 0);
         switch (temp_resultCode) {
         case -1:
             RealeaseD3d(false);
+            ReleaseSemaphore(m_hSemaphore, 1, NULL);
             if (currentTexturePTR.size() == 1) {
                 StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
             }
@@ -568,6 +571,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             }
             break;
         default:
+            ReleaseSemaphore(m_hSemaphore, 1, NULL);
             break;
         }
         return 1;
