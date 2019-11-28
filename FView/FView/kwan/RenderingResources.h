@@ -3,8 +3,11 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <wrl/client.h>
 
 namespace dxshow {
+template <class T>
+using ComPtr = Microsoft::WRL::ComPtr<T>;
 //渲染纹理资源类
 class RenderingResources
 {
@@ -39,10 +42,11 @@ class RenderingResources
     };
     // bool updateFlag;
     ID3D11Device* ref_device;
-    ID3D11Buffer* m_vertexBuffer;
-    ID3D11Texture2D* m_d3dtex;
-    ID3D11ShaderResourceView* m_ResourceView;
-    ID3D11Buffer* m_MVPbuffer;
+    ID3D11Texture2D* ref_d3dtex;
+ 
+    ComPtr<ID3D11Buffer> m_vertexBuffer;
+    ComPtr<ID3D11ShaderResourceView> m_ResourceView;
+    ComPtr<ID3D11Buffer> m_MVPbuffer;
     CommandBuffer m_commandBuffer;
     DirectX::XMMATRIX _MVPmatrix;
     ResourceViewport m_vp = ResourceViewport::FULL_VIEW;

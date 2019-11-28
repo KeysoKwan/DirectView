@@ -4,6 +4,7 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <memory>
+#include <wrl/client.h> 
 #include "kwan/RenderAPI.h"
 #include "kwan/DrawerManager.h"
 #include "kwan/RenderingResources.h"
@@ -12,7 +13,8 @@
 
 namespace dxshow {
 using DrawerManagerU3D = DrawerManager<RenderingResources>;
-
+template <class T>
+using ComPtr = Microsoft::WRL::ComPtr<T>;
 class D3d11Show : public RenderAPI
 {
   public:
@@ -40,14 +42,14 @@ class D3d11Show : public RenderAPI
     bool OnWindowsResized;
 
   private:
-    ID3D11Device2* m_sDevice;
-    ID3D11DeviceContext2* m_deviceContext;
-    IDXGISwapChain1* m_swapChain;
+    ComPtr<ID3D11Device2> m_sDevice;
+    ComPtr<ID3D11DeviceContext2> m_deviceContext;
+    ComPtr<IDXGISwapChain1> m_swapChain;
 
-    ID3D11VertexShader* solidColorVS_;
-    ID3D11PixelShader* solidColorPS_;
-    ID3D11InputLayout* inputLayout_;
-    ID3D11SamplerState* colorMapSampler_;
+    ComPtr<ID3D11VertexShader> solidColorVS_;
+    ComPtr<ID3D11PixelShader> solidColorPS_;
+    ComPtr<ID3D11InputLayout> inputLayout_;
+    ComPtr<ID3D11SamplerState> colorMapSampler_;
 
     //新增渲染类智能指针对象
     //std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;

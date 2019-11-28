@@ -7,7 +7,7 @@ RenderingResources::RenderingResources() : isValuable(false)
 
 RenderingResources::RenderingResources(RenderingResources&& copy) : ref_device(copy.ref_device),
                                                                     m_vertexBuffer(copy.m_vertexBuffer),
-                                                                    m_d3dtex(copy.m_d3dtex),
+                                                                    ref_d3dtex(copy.ref_d3dtex),
                                                                     m_ResourceView(copy.m_ResourceView),
                                                                     m_MVPbuffer(copy.m_MVPbuffer),
                                                                     m_commandBuffer(copy.m_commandBuffer),
@@ -16,18 +16,20 @@ RenderingResources::RenderingResources(RenderingResources&& copy) : ref_device(c
                                                                     isValuable(copy.isValuable) /*,
                                                                     updateFlag(false)*/
 {
-    copy.ref_device = 0;
+    /* copy.ref_device = 0;
     copy.m_vertexBuffer = 0;
     copy.m_d3dtex = 0;
     copy.m_ResourceView = 0;
-    copy.m_MVPbuffer = 0;
+    copy.m_MVPbuffer = 0;*/
 }
 
-RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3dtex, ResourceViewport vp) : ref_device(device), m_d3dtex(d3dtex), m_vp(vp) /*, updateFlag(false)*/
+RenderingResources::RenderingResources(ID3D11Device* device,
+                                       ID3D11Texture2D* d3dtex,
+                                       ResourceViewport vp) : ref_device(device),
+                                                              ref_d3dtex(d3dtex),
+                                                              m_vp(vp)
 {
     using namespace DirectX;
-    //m_device = device;
-    //m_d3dtex = d3dtex;
     D3D11_BUFFER_DESC vertexDesc;
     ZeroMemory(&vertexDesc, sizeof(vertexDesc));
     vertexDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -47,7 +49,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
             {XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT2(1.0f, 1.0f)},
         };
     resourceData.pSysMem = vertices;
-    HRESULT hr = ref_device->CreateBuffer(&vertexDesc, &resourceData, &m_vertexBuffer);
+    HRESULT hr = ref_device->CreateBuffer(&vertexDesc, &resourceData, m_vertexBuffer.GetAddressOf());
     if (FAILED(hr)) {
         char charBuf[128];
         sprintf_s(charBuf, 128, "RenderingResources:CreateBuffer(m_vertexBuffer) failed with error %x", hr);
@@ -61,7 +63,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     vdesc.Texture2D.MostDetailedMip = 0;
     vdesc.Texture2D.MipLevels = 1;
 
-    hr = ref_device->CreateShaderResourceView(m_d3dtex, &vdesc, &m_ResourceView);
+    hr = ref_device->CreateShaderResourceView(ref_d3dtex, &vdesc, m_ResourceView.GetAddressOf());
     if (FAILED(hr)) {
         //     MessageBox(NULL, L"CreateShaderResourceView failed!", L"error", MB_OK);
         char charBuf[128];
@@ -77,7 +79,7 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
     commandDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     commandDesc.ByteWidth = sizeof(CommandBuffer);
     commandDesc.CPUAccessFlags = 0;
-    hr = ref_device->CreateBuffer(&commandDesc, NULL, &m_MVPbuffer);
+    hr = ref_device->CreateBuffer(&commandDesc, NULL, m_MVPbuffer.GetAddressOf());
 
     if (FAILED(hr)) {
         //    MessageBox(NULL, L"Create Buffer failed!", L"error", MB_OK);
@@ -91,19 +93,15 @@ RenderingResources::RenderingResources(ID3D11Device* device, ID3D11Texture2D* d3
 
 RenderingResources::~RenderingResources()
 {
-    if (!isValuable) return;
-    SafeRelease(m_d3dtex);
-    SafeRelease(m_ResourceView);
-    SafeRelease(m_MVPbuffer);
-    SafeRelease(m_vertexBuffer);
+    SafeRelease(ref_d3dtex);
 }
 
 void RenderingResources::UpdateMVPMatrix()
 {
     if (!isValuable) return;
     using namespace DirectX;
-    ID3D11DeviceContext* ctx = NULL;
-    ref_device->GetImmediateContext(&ctx);
+    ComPtr<ID3D11DeviceContext> ctx = NULL;
+    ref_device->GetImmediateContext(ctx.GetAddressOf());
 
     switch (m_vp) {
     case ResourceViewport::FULL_VIEW:
@@ -113,15 +111,14 @@ void RenderingResources::UpdateMVPMatrix()
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(-0.5, 0.0, 1.0));
         break;
     case ResourceViewport::RIGHT_HALF:
-        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 0.5)) /* * XMMatrixScaling(2.0, 1, 1)*/;
+        m_commandBuffer._world = XMMatrixTranspose(XMMatrixScaling(0.5, 1, 1) * XMMatrixTranslation(0.5, 0.0, 0.5));
         break;
     default:
         m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
         break;
     }
 
-    ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
-    ctx->Release();
+    ctx->UpdateSubresource(m_MVPbuffer.Get(), 0, NULL, &m_commandBuffer, 0, 0);
 }
 
 void RenderingResources::ResetToSteropicMatirx(ID3D11DeviceContext* ctx)
@@ -130,7 +127,7 @@ void RenderingResources::ResetToSteropicMatirx(ID3D11DeviceContext* ctx)
     using namespace DirectX;
 
     m_commandBuffer._world = XMMatrixTranspose(XMMatrixIdentity());
-    ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
+    ctx->UpdateSubresource(m_MVPbuffer.Get(), 0, NULL, &m_commandBuffer, 0, 0);
 }
 
 void RenderingResources::Render(ID3D11DeviceContext* ctx, UINT index) const
@@ -139,12 +136,12 @@ void RenderingResources::Render(ID3D11DeviceContext* ctx, UINT index) const
     unsigned int stride = sizeof(VertexPos);
     unsigned int offset = 0;
 
-    ctx->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+    ctx->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    ctx->UpdateSubresource(m_MVPbuffer, 0, NULL, &m_commandBuffer, 0, 0);
-    ctx->VSSetConstantBuffers(0, 1, &m_MVPbuffer);
-    ctx->PSSetShaderResources(0, 1, &m_ResourceView);
+    ctx->UpdateSubresource(m_MVPbuffer.Get(), 0, NULL, &m_commandBuffer, 0, 0);
+    ctx->VSSetConstantBuffers(0, 1, m_MVPbuffer.GetAddressOf());
+    ctx->PSSetShaderResources(0, 1, m_ResourceView.GetAddressOf());
     ctx->Draw(index, 0);
 }
 

@@ -23,7 +23,7 @@ class IvrLog
     {
         if (0 == _instance.get()) {
             _instance.reset(new IvrLog);
-            filelogger = spdlog::rotating_logger_mt("FARlog", "FAR_debug.log", 1048576 * 5, 1);
+            filelogger = spdlog::rotating_logger_mt("FARlog", "FAR_debug.log", 1048576 / 2, 1);
             spdlog::set_level(spdlog::level::trace);
             filelogger->flush_on(spdlog::level::level_enum::trace);
             filelogger->info("--------Log begin---------");
@@ -35,8 +35,8 @@ class IvrLog
     ///</summary>
     ///<param name="msg">需要打印的信息</param>
     ///<param name="_level">日志级别</param>
-    void Log(std::string msg, int _level); 
-    void Log(TCHAR* msg, int _level);      
+    void Log(std::string msg, int _level);
+    void Log(TCHAR* msg, int _level);
     void Log(std::wstring loginfo, int _level);
 
   private:
