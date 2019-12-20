@@ -67,6 +67,7 @@ static void UNITY_INTERFACE_API OnGraphicsDeviceEvent(UnityGfxDeviceEventType ev
 /// errorCode ==-4 纹理句柄丢失
 /// errorCode ==-5 渲染等待进程超时
 /// errorCode ==-6 windows版本低于win10
+/// errorCode ==-7 当前显卡不支持 
 /// </returns>
 _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTextureHandle, int w, int h)
 {

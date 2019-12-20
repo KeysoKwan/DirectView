@@ -105,10 +105,55 @@ int D3d11Show::InitD3D()
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
-        return InitD3D();
+        if (hr == DXGI_ERROR_DEVICE_REMOVED)
+            return InitD3D();
+        else
+            return -3;
     }
     device->QueryInterface(__uuidof(ID3D11Device2), (void**)(m_sDevice.GetAddressOf()));
     context->QueryInterface(__uuidof(ID3D11DeviceContext2), (void**)(m_deviceContext.GetAddressOf()));
+
+    ComPtr<IDXGIDevice1> dxgiDevice(nullptr);
+    hr = m_sDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)(dxgiDevice.GetAddressOf()));
+    ComPtr<IDXGIAdapter> dxgiAdapter(nullptr);
+    hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)(dxgiAdapter.GetAddressOf()));
+    //**************判断显卡型号*****************
+    DXGI_ADAPTER_DESC temp_adapterDesc;
+    dxgiAdapter->GetDesc(&temp_adapterDesc);
+    std::wstring description = temp_adapterDesc.Description;
+    if (description.find(L"NVIDIA") != description.npos) {
+        //从显卡描述中提取版本号
+        auto GetAdapterSeriesNum = [description]() {
+            unsigned int series = 0;
+            for (size_t i = 0; i < description.length(); i++) {
+                size_t begin = 0;
+                size_t size = 0;
+                if (description[i] >= '0' && description[i] <= '9') {
+                    begin = i;
+                    for (size_t k = begin; k < description.length(); k++) {
+                        i++;
+                        if (description[k] >= '0' && description[k] <= '9') {
+                            size = k - begin + 1;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    std::wstring subdes = description.substr(begin, size);
+                    series = _wtoi(subdes.c_str());
+                }
+            }
+            return series;
+        };
+        if (GetAdapterSeriesNum() < 900) //版本小于900，返回-7错误
+        {
+            TCHAR charBuf[128];
+            wsprintf(charBuf, L"Adapter is not suppor error = %s", description.c_str());
+            IvrLog::Inst()->Log(std::wstring(charBuf), 4);
+            return -7;
+        }
+    }
+    //*******************************************
 
     //4X多重采样质量等级
     UINT m4xMsaaQuality(0);
@@ -132,10 +177,6 @@ int D3d11Show::InitD3D()
     swapChainDesc.Flags = 0;
 
     //创建交换链
-    ComPtr<IDXGIDevice1> dxgiDevice(nullptr);
-    m_sDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)dxgiDevice.GetAddressOf());
-    ComPtr<IDXGIAdapter> dxgiAdapter(nullptr);
-    dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf());
     ComPtr<IDXGIFactory2> dxgiFactory(nullptr);
     dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)dxgiFactory.GetAddressOf());
 
@@ -156,7 +197,10 @@ int D3d11Show::InitD3D()
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
-        return InitD3D();
+        if (hr == DXGI_ERROR_DEVICE_REMOVED)
+            return InitD3D();
+        else
+            return -3;
     }
     // shaders
     hr = m_sDevice->CreateVertexShader(g_Tex2DVertexShader, sizeof(g_Tex2DVertexShader), nullptr, solidColorVS_.GetAddressOf());
@@ -177,7 +221,10 @@ int D3d11Show::InitD3D()
             IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
-            return InitD3D();
+            if (hr == DXGI_ERROR_DEVICE_REMOVED)
+                return InitD3D();
+            else
+                return -3;
         }
     }
     else {
@@ -189,7 +236,10 @@ int D3d11Show::InitD3D()
             IvrLog::Inst()->Log(std::string(charBuf), 4);
             m_failedTime++;
             m_isInit = false;
-            return InitD3D();
+            if (hr == DXGI_ERROR_DEVICE_REMOVED)
+                return InitD3D();
+            else
+                return -3;
         }
     }
 
@@ -230,7 +280,10 @@ int D3d11Show::InitD3D()
         IvrLog::Inst()->Log(std::string(charBuf), 4);
         m_failedTime++;
         m_isInit = false;
-        return InitD3D();
+        if (hr == DXGI_ERROR_DEVICE_REMOVED)
+            return InitD3D();
+        else
+            return -3;
     }
     m_isInit = true;
 
@@ -249,15 +302,13 @@ int D3d11Show::InitD3D()
 void D3d11Show::RealeaseD3d(bool isClearhWnd)
 {
     if (!m_isInit) return;
-    
-    if (isRendering)
-    {
+
+    if (isRendering) {
         //等待渲染线程返回
         WaitForSingleObject(m_hSemaphore, 300);
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
         isRendering = false;
     }
-    
 
     colorMapSampler_ = nullptr;
     solidColorVS_ = nullptr;
@@ -424,10 +475,12 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
         currentTexturePTR.push_back(nArgValue);
     }
 
-    if (InitD3D() < 0) {
+    int hresult = InitD3D();
+    if (hresult < 0) {
         ReleaseSemaphore(m_hSemaphore, 1, NULL);
-        return -3;
+        return hresult;
     }
+
     va_end(arg_ptr);
     m_MatrixModifyFlag = true;
 
@@ -555,7 +608,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             }
             SetEvent(resizedSignal);
         }
-        //m_rthread.join();        
+        //m_rthread.join();
         char buff[128] = {};
         sprintf_s(buff, "Render end! result code = %d", temp_resultCode);
         IvrLog::Inst()->Log(buff, 0);

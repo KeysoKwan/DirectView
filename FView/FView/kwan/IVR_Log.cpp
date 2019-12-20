@@ -60,18 +60,6 @@ void IvrLog::Log(TCHAR* loginfo, int _level)
     }
 }
 
-std::string WString2String(const std::wstring& ws)
-{
-    size_t tempsize = 0;
-    std::string strLocale = setlocale(LC_ALL, "");
-    const wchar_t* wchSrc = ws.c_str();
-    char chDest[512];
-    wcstombs_s(&tempsize, chDest, 512, wchSrc, wcslen(wchSrc));
-    std::string strResult = chDest;
-    setlocale(LC_ALL, strLocale.c_str());
-    return strResult;
-}
-
 void IvrLog::Log(std::wstring loginfo, int _level)
 {
     std::string str = WString2String(loginfo);
@@ -97,6 +85,18 @@ void IvrLog::Log(std::wstring loginfo, int _level)
     default:
         break;
     }
+}
+
+std::string IvrLog::WString2String(const std::wstring& ws)
+{
+    size_t tempsize = 0;
+    std::string strLocale = setlocale(LC_ALL, "");
+    const wchar_t* wchSrc = ws.c_str();
+    char chDest[512];
+    wcstombs_s(&tempsize, chDest, 512, wchSrc, wcslen(wchSrc));
+    std::string strResult = chDest;
+    setlocale(LC_ALL, strLocale.c_str());
+    return strResult;
 }
 
 IvrLog::~IvrLog(void)
