@@ -35,7 +35,7 @@ class RenderAPI
     ///是否默认开启3D stereo显示
     bool m_stereoEnabled;
     ///目标帧率
-    int TargetFrameRate = 60;
+    int TargetFrameRate = 120;
 
   protected:
     U3DColorSpace m_isGamaSpace;

@@ -45,6 +45,7 @@ D3d11Show::D3d11Show() : m_sDevice(nullptr),
         std::wstring temp_windowName = std::wstring(name);
         if (temp_windowName.find(L"Unity") != std::wstring::npos) {
             U3dWin = h;
+            break;
         }
     }
     if (U3dWin != NULL) //如果U3D的编辑器窗口不是NULL,重新赋值
@@ -115,8 +116,26 @@ int D3d11Show::InitD3D()
 
     ComPtr<IDXGIDevice1> dxgiDevice(nullptr);
     hr = m_sDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)(dxgiDevice.GetAddressOf()));
+    if (FAILED(hr)) {
+        //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "m_sDevice->QueryInterface(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+        m_failedTime++;
+        m_isInit = false;
+        return -3;
+    }
     ComPtr<IDXGIAdapter> dxgiAdapter(nullptr);
     hr = dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)(dxgiAdapter.GetAddressOf()));
+    if (FAILED(hr)) {
+        //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
+        char charBuf[128];
+        sprintf_s(charBuf, 128, "dxgiDevice->GetParent(...) failed with error %x", hr);
+        IvrLog::Inst()->Log(std::string(charBuf), 4);
+        m_failedTime++;
+        m_isInit = false;
+        return -3;
+    }
     //**************判断显卡型号*****************
     DXGI_ADAPTER_DESC temp_adapterDesc;
     dxgiAdapter->GetDesc(&temp_adapterDesc);
@@ -172,7 +191,7 @@ int D3d11Show::InitD3D()
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = 2; // Use double buffering to minimize latency.
-    swapChainDesc.Scaling = DXGI_SCALING_NONE;
+    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // All Windows Store apps must use this SwapEffect.
     swapChainDesc.Flags = 0;
 
@@ -573,6 +592,9 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
 
                         vp.Width = static_cast<float>(m_w);
                         vp.Height = static_cast<float>(m_h);
+                        char buff[128] = {};
+                        sprintf_s(buff, "OnWindowsResized,width = %d  height = %d , scale = %d ", m_w, m_h, GetSystemMetrics(SM_CXSCREEN));
+                        IvrLog::Inst()->Log(buff, 0);
                         vp.MinDepth = 0.f;
                         vp.MaxDepth = 1.f;
                         m_deviceContext->RSSetViewports(1, &vp);
@@ -596,7 +618,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         lastFailedTick = GetTickCount();
                         isRendering = false;
                         char buff[128] = {};
-                        sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", hr);
+                        sprintf_s(buff, "m_swapChain->Present(1, 0) failed with error 0x%08X", m_sDevice->GetDeviceRemovedReason());
                         IvrLog::Inst()->Log(buff, 4);
                         temp_resultCode = -1;
                         OnWindowsResized = true;
@@ -617,10 +639,13 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
             RealeaseD3d(false);
             ReleaseSemaphore(m_hSemaphore, 1, NULL);
             if (currentTexturePTR.size() == 1) {
-                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, currentTexturePTR[0]);
+                void* arg0 = currentTexturePTR[0];
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 1, arg0);
             }
             else if (currentTexturePTR.size() == 2) {
-                StartRenderingView(m_ViewhWnd, m_w, m_h, 2, currentTexturePTR[0], currentTexturePTR[1]);
+                void* arg0 = currentTexturePTR[0];
+                void* arg1 = currentTexturePTR[1];
+                StartRenderingView(m_ViewhWnd, m_w, m_h, 2, arg0, arg1);
             }
             break;
         default:
