@@ -22,13 +22,13 @@ class IvrLog
     static IvrLog* Inst()
     {
         if (0 == _instance.get()) {
-            TCHAR szFilePath[MAX_PATH + 1] = {0};
-            GetModuleFileName(NULL, szFilePath, MAX_PATH);
-            (_tcsrchr(szFilePath, _T('\\')))[1] = 0; // 删除文件名，只获得路径字串
-            std::wstring str_url(szFilePath);
-            str_url.append(std::wstring(_T("FAR_debug.log")));
+            CHAR szFilePath[MAX_PATH + 1] = {0};
+            GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
+            (strrchr(szFilePath, _T('\\')))[1] = 0; // 删除文件名，只获得路径字串
+            std::string str_url(szFilePath);
+            str_url.append(std::string("FAR_debug.log"));
             _instance.reset(new IvrLog);
-            filelogger = spdlog::rotating_logger_mt("FARlog", IvrLog::WString2String(str_url), 1048576 * 5, 1);
+            filelogger = spdlog::rotating_logger_mt("FARlog", str_url, 1048576 * 5, 1);
             spdlog::set_level(spdlog::level::trace);
             filelogger->flush_on(spdlog::level::level_enum::trace);
             filelogger->info("--------Log begin---------");

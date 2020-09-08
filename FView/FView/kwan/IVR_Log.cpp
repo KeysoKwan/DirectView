@@ -89,14 +89,15 @@ void IvrLog::Log(std::wstring loginfo, int _level)
 
 std::string IvrLog::WString2String(const std::wstring& ws)
 {
-    size_t tempsize = 0;
-    std::string strLocale = setlocale(LC_ALL, "");
-    const wchar_t* wchSrc = ws.c_str();
-    char chDest[512];
-    wcstombs_s(&tempsize, chDest, 512, wchSrc, wcslen(wchSrc));
-    std::string strResult = chDest;
-    setlocale(LC_ALL, strLocale.c_str());
-    return strResult;
+    std::string str;
+    int nLen = (int)ws.length();
+    str.resize(nLen, ' ');
+    int nResult = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)ws.c_str(), nLen, (LPSTR)str.c_str(), nLen, NULL, NULL);
+    if (nResult == 0)
+    {
+        return "";
+    }
+    return str;
 }
 
 IvrLog::~IvrLog(void)
