@@ -1,7 +1,7 @@
 ﻿#include "RenderAPI.h"
 #include "../D3d11Show.h"
 namespace dxshow {
-RenderAPI::RenderAPI() : m_stereoEnabled(true),
+RenderAPI::RenderAPI() : m_stereoEnabled(false),
                          m_OrthoMatrixType(OrthoMatrixType::T_2D),
                          m_isGamaSpace(U3DColorSpace::Gama)
 {

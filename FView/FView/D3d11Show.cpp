@@ -573,14 +573,14 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                         GetWindowRect(m_ViewhWnd, &rect);
                         m_w = rect.right - rect.left;
                         m_h = rect.bottom - rect.top;
-                        if (m_stereoEnabled) {
-                            m_stereoEnabled = UpdateStereoEnabledStatus();
-                            if (!m_stereoEnabled) {
-                                char buff[128] = {};
-                                sprintf_s(buff, "Stereopic is disable in current hardware,falling back to normal swapchain.");
-                                IvrLog::Inst()->Log(buff, 3);
-                            }
-                        }
+                        //if (m_stereoEnabled) {
+                        //    m_stereoEnabled = UpdateStereoEnabledStatus();
+                        //    if (!m_stereoEnabled) {
+                        //        char buff[128] = {};
+                        //        sprintf_s(buff, "Stereopic is disable in current hardware,falling back to normal swapchain.");
+                        //        IvrLog::Inst()->Log(buff, 3);
+                        //    }
+                        //}
                         m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
                         if (m_drawer->UpdateRenderingDependent(m_stereoEnabled) < 0) {
                             temp_resultCode = -1;
