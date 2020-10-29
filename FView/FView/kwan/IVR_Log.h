@@ -11,7 +11,7 @@ KeysoKwan 2019.10.11
 #    define EASY_LOG_H_8080
 #    include <memory>
 #    include <tchar.h>
-
+#    include <direct.h>
 #    include "spdlog/spdlog.h"
 #    include "spdlog/logger.h"
 #    include "spdlog/sinks/rotating_file_sink.h"
@@ -24,11 +24,15 @@ class IvrLog
         if (0 == _instance.get()) {
             CHAR szFilePath[MAX_PATH + 1] = {0};
             GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
-            (strrchr(szFilePath, _T('\\')))[1] = 0; // 删除文件名，只获得路径字串
-            std::string str_url(szFilePath);
-            str_url.append(std::string("FAR_debug.log"));
+            std::string programName = strrchr(szFilePath, _T('\\'));
+            std::string folderPath = "C:\\F3DFuture\\AppLog" + programName.erase(programName.find_last_of("."));
+            if (0 != _access(folderPath.c_str(), 0)) {
+                // if this folder not exist, create a new one.
+                _mkdir(folderPath.c_str());
+            }
+            folderPath.append(std::string("\\FAR_debug.log"));
             _instance.reset(new IvrLog);
-            filelogger = spdlog::rotating_logger_mt("FARlog", str_url, 1048576 * 5, 1);
+            filelogger = spdlog::rotating_logger_mt("FARlog", folderPath, 1048576 * 5, 1);
             spdlog::set_level(spdlog::level::trace);
             filelogger->flush_on(spdlog::level::level_enum::trace);
             filelogger->info("--------Log begin---------");

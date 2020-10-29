@@ -133,6 +133,21 @@ void SetTouchFeedback(HWND hWnd, bool enable)
     }
 }
 
+
+/// 显示/隐藏边框
+void ActiveEdge(HWND hwnd, bool active)
+{
+    if (active)
+    {
+        SetWindowLong(hwnd, GWL_STYLE, WS_BORDER | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP);
+    }
+    else
+    {
+        SetWindowLong(hwnd, GWL_STYLE, WS_VISIBLE | WS_TILEDWINDOW);
+    }
+}
+
+
 //
 //  函数: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -179,6 +194,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         CloseTouchInputHandle((HTOUCHINPUT)lParam);
         delete[] ti;
     } break;
+    case WM_KEYDOWN:
+        switch (wParam)
+        {
+        case VK_F11:
+            ActiveEdge(hWnd, temp_edge);
+            temp_edge = !temp_edge;
+            break;
+        default:
+            break;
+        }
+        break;
     case WM_U3D:
         g_hU3 = (HWND)wParam;
         PostMessage(g_hU3, WM_U3D, (WPARAM)hWnd, lParam);
