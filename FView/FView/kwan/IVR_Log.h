@@ -25,7 +25,20 @@ class IvrLog
             CHAR szFilePath[MAX_PATH + 1] = {0};
             GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
             std::string programName = strrchr(szFilePath, _T('\\'));
-            std::string folderPath = "C:\\F3DFuture\\AppLog" + programName.erase(programName.find_last_of("."));
+
+            std::string folderPath = "C:\\F3DFuture";
+            if (0 != _access(folderPath.c_str(), 0)) {
+                // if this folder not exist, create a new one.
+                _mkdir(folderPath.c_str());
+            }
+
+            folderPath = "C:\\F3DFuture\\AppLog";
+            if (0 != _access(folderPath.c_str(), 0)) {
+                // if this folder not exist, create a new one.
+                _mkdir(folderPath.c_str());
+            }
+
+            folderPath = "C:\\F3DFuture\\AppLog" + programName.erase(programName.find_last_of("."));
             if (0 != _access(folderPath.c_str(), 0)) {
                 // if this folder not exist, create a new one.
                 _mkdir(folderPath.c_str());
