@@ -86,8 +86,6 @@ int D3d11Show::InitD3D()
 #if defined(DEBUG) || defined(_DEBUG)
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-    ComPtr<ID3D11Device> device;
-    ComPtr<ID3D11DeviceContext> context;
     HRESULT hr = D3D11CreateDevice(
         NULL, // 默认显示适配器
         D3D_DRIVER_TYPE_HARDWARE,
@@ -96,9 +94,9 @@ int D3d11Show::InitD3D()
         featureLevels,
         ARRAYSIZE(featureLevels),
         D3D11_SDK_VERSION,
-        device.GetAddressOf(),
+        m_sDevice.GetAddressOf(),
         &myFeatureLevel,
-        context.GetAddressOf());
+        m_deviceContext.GetAddressOf());
 
     if (FAILED(hr)) {
         char charBuf[128];
@@ -111,10 +109,8 @@ int D3d11Show::InitD3D()
         else
             return -3;
     }
-    device->QueryInterface(__uuidof(ID3D11Device2), (void**)(m_sDevice.GetAddressOf()));
-    context->QueryInterface(__uuidof(ID3D11DeviceContext2), (void**)(m_deviceContext.GetAddressOf()));
 
-    ComPtr<IDXGIDevice1> dxgiDevice(nullptr);
+    ComPtr<IDXGIDevice> dxgiDevice(nullptr);
     hr = m_sDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)(dxgiDevice.GetAddressOf()));
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
@@ -182,22 +178,27 @@ int D3d11Show::InitD3D()
         &m4xMsaaQuality);
 
     // Allocate a descriptor.
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
-    swapChainDesc.Width = 0; // Use automatic sizing.
-    swapChainDesc.Height = 0;
-    swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // This is the most common swap chain format.
-    swapChainDesc.Stereo = m_stereoEnabled;
-    swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
-    swapChainDesc.SampleDesc.Quality = 0;
+    DXGI_SWAP_CHAIN_DESC swapChainDesc = {0};
+    swapChainDesc.BufferDesc.Width = m_w;
+    swapChainDesc.BufferDesc.Height = m_h;
+    swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
+    swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
+    swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+    swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+
+    swapChainDesc.SampleDesc.Count = 4;
+    swapChainDesc.SampleDesc.Quality = m4xMsaaQuality - 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 2; // Use double buffering to minimize latency.
-    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // All Windows Store apps must use this SwapEffect.
+    swapChainDesc.BufferCount = 1;
+    swapChainDesc.OutputWindow = m_ViewhWnd;
+    swapChainDesc.Windowed = true;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     swapChainDesc.Flags = 0;
 
     //创建交换链
-    ComPtr<IDXGIFactory2> dxgiFactory(nullptr);
-    dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), (void**)dxgiFactory.GetAddressOf());
+    ComPtr<IDXGIFactory> dxgiFactory(nullptr);
+    dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)dxgiFactory.GetAddressOf());
 
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullScreenDesc;
     ZeroMemory(&fullScreenDesc, sizeof(fullScreenDesc));
@@ -208,7 +209,7 @@ int D3d11Show::InitD3D()
     m_deviceContext->ClearState();
     m_deviceContext->Flush();
     //hr = dxgiFactory->CreateSwapChain(m_sDevice, &sd, &m_swapChain);
-    hr = dxgiFactory->CreateSwapChainForHwnd(dxgiDevice.Get(), m_ViewhWnd, &swapChainDesc, &fullScreenDesc, nullptr, m_swapChain.GetAddressOf());
+    hr = dxgiFactory->CreateSwapChain(m_sDevice.Get(), &swapChainDesc, &m_swapChain);
     if (FAILED(hr)) {
         //MessageBox(NULL, L"Create SwapChain failed!", L"error", MB_OK);
         char charBuf[128];
@@ -610,7 +611,7 @@ int D3d11Show::StartRenderingView(HWND hWnd, int w, int h, int count, ...)
                     // The first argument instructs DXGI to block until VSync, putting the application
                     // to sleep until the next VSync. This ensures we don't waste any cycles rendering
                     // frames that will never be displayed to the screen.
-                    HRESULT hr = m_swapChain->Present1(1, 0, &parameters);
+                    HRESULT hr = m_swapChain->Present(1, 0);
                     if (FAILED(hr)) {
                         if (GetTickCount() - lastFailedTick < 1000.0f) {
                             IvrLog::Inst()->Log("m_swapChain->Present Failed twice in a second!", 3);

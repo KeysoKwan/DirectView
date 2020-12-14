@@ -42,9 +42,9 @@ class D3d11Show : public RenderAPI
     bool OnWindowsResized;
 
   private:
-    ComPtr<ID3D11Device2> m_sDevice;
-    ComPtr<ID3D11DeviceContext2> m_deviceContext;
-    ComPtr<IDXGISwapChain1> m_swapChain;
+    ComPtr<ID3D11Device> m_sDevice;
+    ComPtr<ID3D11DeviceContext> m_deviceContext;
+    ComPtr<IDXGISwapChain> m_swapChain;
 
     ComPtr<ID3D11VertexShader> solidColorVS_;
     ComPtr<ID3D11PixelShader> solidColorPS_;
