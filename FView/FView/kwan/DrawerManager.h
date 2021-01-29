@@ -17,7 +17,7 @@ class DrawerManager
 {
   public:
     DrawerManager<Resource>();
-    DrawerManager<Resource>(ID3D11Device* d3dDevice, IDXGISwapChain* d3dSwapchian);
+    DrawerManager<Resource>(ID3D11Device* d3dDevice, IDXGISwapChain1* d3dSwapchian);
     ~DrawerManager<Resource>();
 
     int GetManagerSize() const;
@@ -45,7 +45,7 @@ class DrawerManager
     };
     //do not released ref_ value
     ID3D11Device* ref_d3dDevice;
-    IDXGISwapChain* ref_d3dSwapchain;
+    IDXGISwapChain1* ref_d3dSwapchain;
     bool m_stereoEnable;
 
     ComPtr<ID3D11RenderTargetView> m_renderTargetView;
@@ -76,7 +76,7 @@ DrawerManager<Resource>::DrawerManager()
 
 template <typename Resource>
 DrawerManager<Resource>::DrawerManager(ID3D11Device* d3dDevice,
-                                       IDXGISwapChain* d3dSwapchain) : ref_d3dDevice(d3dDevice),
+                                       IDXGISwapChain1* d3dSwapchain) : ref_d3dDevice(d3dDevice),
                                                                         ref_d3dSwapchain(d3dSwapchain),
                                                                         m_renderTargetView(nullptr),
                                                                         m_renderTargetViewRight(nullptr),
