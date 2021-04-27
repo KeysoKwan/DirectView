@@ -14,6 +14,11 @@ int RenderAPI::StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHe
 {
     return 0;
 }
+int RenderAPI::OnRenderEvent()
+{
+    return 0;
+}
+
 void RenderAPI::SwichProjector(OrthoMatrixType type)
 {
 }

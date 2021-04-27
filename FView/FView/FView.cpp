@@ -89,6 +89,20 @@ _VSAPI_ int fmARStartViewDX11(HWND hWnd, void* textureHandle, void* RightTexture
 //    }
 //    return m_d3d11show.StartRenderingView(hWnd, w, h, 2, LeftTextureHandle, RightTextureHandle);
 //}
+// --------------------------------------------------------------------------
+// GetRenderEventFunc, an example function we export which is used to get a rendering event callback function.
+static void UNITY_INTERFACE_API OnRenderEvent(int eventID)
+{
+    // Unknown / unsupported graphics device type? Do nothing
+    if (m_currentAPI == NULL)
+        return;
+    m_currentAPI->OnRenderEvent();
+}
+
+_VSAPI_ UnityRenderingEvent UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRenderEventFunc()
+{
+    return OnRenderEvent;
+}
 
 
 _VSAPI_ int fmARSwitchProjector(int type)

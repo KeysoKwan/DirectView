@@ -148,7 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="kwan\Tex2DVertexShader.hlsl" />
-    <FxCompile Include="kwan\Tex2DPixelShader.hlsl" />
     <FxCompile Include="kwan\Tex2DPixelShaderLinearSpace.hlsl" />
+    <FxCompile Include="kwan\Tex2DPixelShader.hlsl" />
   </ItemGroup>
 </Project>

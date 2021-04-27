@@ -28,6 +28,7 @@ class D3d11Show : public RenderAPI
     ///int swapchainHeight 交换链路宽度
     ///int count 缺省参数个数
     virtual int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
+    virtual int OnRenderEvent();
     virtual void SwichProjector(OrthoMatrixType type);
     virtual bool UpdateStereoEnabledStatus();
     virtual void EndRendering();
@@ -51,6 +52,8 @@ class D3d11Show : public RenderAPI
     ComPtr<ID3D11InputLayout> inputLayout_;
     ComPtr<ID3D11SamplerState> colorMapSampler_;
 
+    std::unique_ptr<DrawerManagerU3D> m_drawer;
+
     //新增渲染类智能指针对象
     //std::unique_ptr<DrawerManagerU3D> m_drawer = nullptr;
     //存下当前纹理指针，用于异常处理
@@ -67,7 +70,7 @@ class D3d11Show : public RenderAPI
     bool m_MatrixModifyFlag;
     //线程与线程安全对象
     std::thread m_renderingThread;
-    HANDLE m_hSemaphore = NULL;
+
     const char* m_SemaphoreName = "D3D11SHOW_sem";
     std::mutex m_mutex;
 

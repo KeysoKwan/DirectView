@@ -28,6 +28,7 @@ class RenderAPI
     ///int swapchainHeight 交换链路宽度
     ///int count 缺省参数个数
     virtual int StartRenderingView(HWND hWnd, int swapchainWidth, int swapchainHeight, int count, ...);
+    virtual int OnRenderEvent();
     virtual void SwichProjector(OrthoMatrixType type);
     virtual void SetGamaSpace(U3DColorSpace space);
     virtual bool UpdateStereoEnabledStatus();
